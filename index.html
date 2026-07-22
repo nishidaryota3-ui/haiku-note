@@ -34,23 +34,29 @@
             font-size: 0.85rem; color: #8c8476; letter-spacing: 0.15em; text-align: center;
         }
 
-        /* 🖋️ ステップ1：完全中央・必ず1行で収まる縦書き入力エリア */
+        /* 🖋️ ステップ1：完全中央・画面内に必ず収まる縦書き入力エリア */
         .vertical-input-wrapper {
-            height: 60vh; width: 100%;
+            height: 65vh; width: 100%;
             display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
         }
 
         .vertical-textarea {
             writing-mode: vertical-rl; -webkit-writing-mode: vertical-rl;
-            font-family: inherit; font-size: clamp(1.8rem, 5vh, 2.3rem); 
+            font-family: inherit;
             letter-spacing: 0.3em; line-height: 1.0;
             color: #2b2b2b; background: transparent; border: none; outline: none;
             height: 100%; resize: none; text-align: start;
             
             /* 強制的に絶対1行（折り返さない）＆ 中央揃え設定 */
             white-space: nowrap !important;
-            overflow-x: hidden; overflow-y: hidden;
+            overflow: hidden;
             margin: 0 auto;
+            padding: 10px 0;
+            
+            /* 初期フォントサイズ */
+            font-size: 2.2rem;
+            transition: font-size 0.1s ease;
         }
         .vertical-textarea::placeholder { color: #ccc; font-size: 1.2rem; letter-spacing: 0.2em; }
 
@@ -126,7 +132,7 @@
         <div class="step-title">【1/3】 縦書きで句を詠む</div>
         
         <div class="vertical-input-wrapper">
-            <textarea id="inputPhrase" class="vertical-textarea" placeholder="ここに句を入力..." autofocus rows="1" wrap="off"></textarea>
+            <textarea id="inputPhrase" class="vertical-textarea" placeholder="ここに句を入力..." autofocus rows="1" wrap="off" oninput="adjustFontSize()"></textarea>
         </div>
 
         <div class="btn-group">
@@ -223,6 +229,24 @@
 
         let currentHaikuData = { phrase: '', kigo: '', detailSeason: '', season: '夏', author: '' };
 
+        // 📏 文字数に応じて縦書きフォントサイズを自動調整（はみ出し防止）
+        function adjustFontSize() {
+            const textarea = document.getElementById('inputPhrase');
+            const textLength = textarea.value.length;
+
+            if (textLength <= 15) {
+                textarea.style.fontSize = '2.2rem';
+            } else if (textLength <= 20) {
+                textarea.style.fontSize = '1.8rem';
+            } else if (textLength <= 25) {
+                textarea.style.fontSize = '1.5rem';
+            } else if (textLength <= 30) {
+                textarea.style.fontSize = '1.2rem';
+            } else {
+                textarea.style.fontSize = '1.0rem';
+            }
+        }
+
         function goToStep(stepNum) {
             document.querySelectorAll('.step-screen').forEach(el => el.classList.remove('active'));
             document.getElementById(`step${stepNum}`).classList.add('active');
@@ -284,11 +308,13 @@
 
         // フォームリセットして次の入力へ
         function resetForm() {
-            document.getElementById('inputPhrase').value = '';
+            const textarea = document.getElementById('inputPhrase');
+            textarea.value = '';
             document.getElementById('kigoInput').value = '';
             document.getElementById('detailSeasonInput').value = '';
+            adjustFontSize();
             goToStep(1);
-            document.getElementById('inputPhrase').focus();
+            textarea.focus();
         }
     </script>
 </body>
