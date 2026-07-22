@@ -4,12 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>句詠み・詠み溜め帳</title>
-    
-    <!-- PWA / アプリ化設定 -->
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#faf9f6">
 
     <style>
         /* 全体初期化 */
@@ -23,48 +17,52 @@
         /* 各ステップのコンテナ */
         .step-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-            padding: calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));
+            display: none; flex-direction: column; justify-content: space-between; align-items: center;
+            padding: calc(15px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));
         }
         .step-screen.active { display: flex; }
 
         /* ステップ見出し */
         .step-title {
-            position: absolute; top: calc(25px + env(safe-area-inset-top));
             font-size: 0.85rem; color: #8c8476; letter-spacing: 0.15em; text-align: center;
+            width: 100%;
         }
 
-        /* 🖋️ ステップ1：完全中央・画面内に必ず収まる縦書き入力エリア */
-        .vertical-input-wrapper {
-            height: 65vh; width: 100%;
-            display: flex; justify-content: center; align-items: center;
-            overflow: hidden;
+        /* 🖋️ ステップ1：縦書きリアルタイム表示エリア（画面中央・はみ出しゼロ） */
+        .vertical-display-area {
+            flex: 1; width: 100%; display: flex; justify-content: center; align-items: center;
+            overflow: hidden; padding: 20px 0;
         }
 
-        .vertical-textarea {
+        .vertical-text-preview {
             writing-mode: vertical-rl; -webkit-writing-mode: vertical-rl;
-            font-family: inherit;
-            letter-spacing: 0.3em; line-height: 1.0;
-            color: #2b2b2b; background: transparent; border: none; outline: none;
-            height: 100%; resize: none; text-align: start;
-            
-            /* 強制的に絶対1行（折り返さない）＆ 中央揃え設定 */
-            white-space: nowrap !important;
-            overflow: hidden;
-            margin: 0 auto;
-            padding: 10px 0;
-            
-            /* 初期フォントサイズ */
-            font-size: 2.2rem;
-            transition: font-size 0.1s ease;
+            font-family: inherit; font-size: 3.2vh; line-height: 1.0; letter-spacing: 0.3em;
+            font-weight: 500; color: #2b2b2b; white-space: nowrap; text-align: center;
+            max-height: 100%; display: block;
         }
-        .vertical-textarea::placeholder { color: #ccc; font-size: 1.2rem; letter-spacing: 0.2em; }
+        .vertical-text-preview.placeholder { color: #cccccc; }
+
+        /* ⌨️ ステップ1：下部スムーズ入力ボックス（重なりバグ防止） */
+        .input-dock {
+            width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 10px;
+            background: #ffffff; border: 1px solid #eae8e3; border-radius: 12px;
+            padding: 12px 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+        }
+
+        .dock-input {
+            width: 100%; border: none; outline: none; font-size: 1.1rem;
+            font-family: inherit; background: transparent; color: #2b2b2b;
+            padding: 4px 0;
+        }
 
         /* 🏷️ ステップ2：季語確認フォーム */
+        .step2-content {
+            flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;
+        }
         .kigo-check-card {
             background: #ffffff; border: 1px solid #eae8e3; border-radius: 8px;
             padding: 30px 25px; width: 85vw; max-width: 400px; text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
         .kigo-prompt { font-size: 1.05rem; color: #2b2b2b; margin-bottom: 1.2rem; line-height: 1.6; }
         .kigo-prompt span { font-weight: bold; border-bottom: 1px solid #2b2b2b; padding-bottom: 2px; }
@@ -77,45 +75,28 @@
         }
         .text-input:focus { border-color: #2b2b2b; background: #fff; }
 
-        /* 👁️ ステップ3：季寄せ風プレビュー枠（本番アプリと完全同等の構造） */
+        /* 👁️ ステップ3：季寄せ風プレビュー枠 */
         .preview-container {
-            position: relative; width: 100%; height: 100%;
+            position: relative; width: 100%; flex: 1;
             display: flex; justify-content: center; align-items: center;
         }
 
         /* 🧭 パンくずリスト枠（左上） */
         .preview-breadcrumb {
-            position: absolute; 
-            top: calc(20px + env(safe-area-inset-top)); 
-            left: 20px; 
-            right: 140px; 
-            font-size: 0.82rem; 
-            color: #666666;
-            letter-spacing: 0.05em; 
+            position: absolute; top: 10px; left: 0px; right: 140px; 
+            font-size: 0.82rem; color: #666666; letter-spacing: 0.05em; 
             display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.4rem;
         }
         .preview-breadcrumb span.separator { color: #b5b5b5; font-family: sans-serif; }
 
         /* 🏷️ 作者名タグ（右上） */
         .preview-author-tag {
-            position: absolute; 
-            top: calc(20px + env(safe-area-inset-top)); 
-            right: 20px;
+            position: absolute; top: 10px; right: 0px;
             font-size: 1.05rem; color: #2b2b2b; letter-spacing: 0.1em; font-weight: 500;
         }
 
-        /* 句の縦書き表示（中央） */
-        .preview-phrase {
-            writing-mode: vertical-rl; -webkit-writing-mode: vertical-rl;
-            font-size: 3.2vh; line-height: 1.0; letter-spacing: 0.3em; font-weight: 500;
-            white-space: nowrap; text-align: center;
-        }
-
         /* 🔘 ボタンデザイン */
-        .btn-group { 
-            position: absolute; bottom: calc(30px + env(safe-area-inset-bottom));
-            display: flex; gap: 15px; justify-content: center; width: 100%; 
-        }
+        .btn-group { display: flex; gap: 15px; justify-content: center; width: 100%; }
         .btn {
             padding: 12px 30px; font-size: 0.95rem; font-family: inherit; letter-spacing: 0.1em;
             color: #faf9f6; background-color: #2b2b2b; border: none; border-radius: 25px;
@@ -127,16 +108,21 @@
 </head>
 <body>
 
-    <!-- ── STEP 1：縦書き入力画面 ── -->
+    <!-- ── STEP 1：縦書きリアルタイム入力画面 ── -->
     <div id="step1" class="step-screen active">
         <div class="step-title">【1/3】 縦書きで句を詠む</div>
         
-        <div class="vertical-input-wrapper">
-            <textarea id="inputPhrase" class="vertical-textarea" placeholder="ここに句を入力..." autofocus rows="1" wrap="off" oninput="adjustFontSize()"></textarea>
+        <!-- 中央：縦書きプレビュー（画面枠に100%綺麗に収まります） -->
+        <div class="vertical-display-area">
+            <p id="verticalPreview" class="vertical-text-preview placeholder">ここに句が表示されます</p>
         </div>
 
-        <div class="btn-group">
-            <button class="btn" onclick="goToStep2()">次へ 進む ＞</button>
+        <!-- 下部：文字入力欄（文字重なりを完全に防ぎます） -->
+        <div class="input-dock">
+            <input type="text" id="inputPhrase" class="dock-input" placeholder="ここをタップして入力..." autofocus oninput="updateLiveVertical()">
+            <div class="btn-group" style="margin-top: 5px;">
+                <button class="btn" style="width: 100%;" onclick="goToStep2()">次へ 進む ＞</button>
+            </div>
         </div>
     </div>
 
@@ -144,26 +130,28 @@
     <div id="step2" class="step-screen">
         <div class="step-title">【2/3】 季語の確認</div>
         
-        <div class="kigo-check-card">
-            <div class="kigo-prompt">
-                自動抽出された季語：<br>
-                <span id="detectedKigoText">夏の雨（三夏）</span><br>
-                これでよろしいですか？
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">季語（修正する場合のみ変更してください）</label>
-                <input type="text" id="kigoInput" class="text-input" placeholder="例：夏の雨">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">詳細季節（任意）</label>
-                <input type="text" id="detailSeasonInput" class="text-input" placeholder="例：三夏、初夏など">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">作者名</label>
-                <input type="text" id="authorInput" class="text-input" value="西田亮太">
+        <div class="step2-content">
+            <div class="kigo-check-card">
+                <div class="kigo-prompt">
+                    自動抽出された季語：<br>
+                    <span id="detectedKigoText">夏の雨（三夏）</span><br>
+                    これでよろしいですか？
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">季語（修正する場合のみ変更してください）</label>
+                    <input type="text" id="kigoInput" class="text-input" placeholder="例：夏の雨">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">詳細季節（任意）</label>
+                    <input type="text" id="detailSeasonInput" class="text-input" placeholder="例：三夏、初夏など">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">作者名</label>
+                    <input type="text" id="authorInput" class="text-input" value="西田亮太">
+                </div>
             </div>
         </div>
 
@@ -176,7 +164,7 @@
     <!-- ── STEP 3：季寄せ風サンプルプレビュー画面 ── -->
     <div id="step3" class="step-screen">
         <div class="preview-container">
-            <!-- 🧭 左上：パンくずリスト（完成時に季節・季語が連動表示） -->
+            <!-- 🧭 左上：パンくずリスト -->
             <div id="previewBreadcrumb" class="preview-breadcrumb">
                 <span>home</span>
                 <span class="separator">&lt;</span>
@@ -191,7 +179,7 @@
             <div id="previewAuthor" class="preview-author-tag"></div>
 
             <!-- 句の縦書き表示（中央） -->
-            <p id="previewPhrase" class="preview-phrase"></p>
+            <p id="previewPhrase" class="vertical-text-preview"></p>
         </div>
 
         <div class="btn-group">
@@ -201,7 +189,7 @@
     </div>
 
     <!-- ── STEP 4：完了画面 ── -->
-    <div id="step4" class="step-screen">
+    <div id="step4" class="step-screen" style="justify-content: center;">
         <div style="text-align: center; line-height: 2;">
             <div style="font-size: 2rem; margin-bottom: 1rem;">🍃</div>
             <h2 style="font-weight: 500; font-size: 1.3rem;">登録が完了しました</h2>
@@ -214,7 +202,7 @@
     </div>
 
     <script>
-        // 簡易的な季語辞書（※プロトタイプ用の基本リスト）
+        // 簡易的な季語辞書
         const sampleKigoDict = [
             { kigo: '夏の雨', detail: '三夏', season: '夏' },
             { kigo: '春の風', detail: '三春', season: '春' },
@@ -229,21 +217,17 @@
 
         let currentHaikuData = { phrase: '', kigo: '', detailSeason: '', season: '夏', author: '' };
 
-        // 📏 文字数に応じて縦書きフォントサイズを自動調整（はみ出し防止）
-        function adjustFontSize() {
-            const textarea = document.getElementById('inputPhrase');
-            const textLength = textarea.value.length;
+        // リアルタイムで中央に縦書きを反映
+        function updateLiveVertical() {
+            const inputVal = document.getElementById('inputPhrase').value;
+            const previewEl = document.getElementById('verticalPreview');
 
-            if (textLength <= 15) {
-                textarea.style.fontSize = '2.2rem';
-            } else if (textLength <= 20) {
-                textarea.style.fontSize = '1.8rem';
-            } else if (textLength <= 25) {
-                textarea.style.fontSize = '1.5rem';
-            } else if (textLength <= 30) {
-                textarea.style.fontSize = '1.2rem';
+            if (inputVal.trim() === '') {
+                previewEl.innerText = 'ここに句が表示されます';
+                previewEl.classList.add('placeholder');
             } else {
-                textarea.style.fontSize = '1.0rem';
+                previewEl.innerText = inputVal;
+                previewEl.classList.remove('placeholder');
             }
         }
 
@@ -252,7 +236,6 @@
             document.getElementById(`step${stepNum}`).classList.add('active');
         }
 
-        // ステップ1 ➔ ステップ2（入力テキストから季語を自動判別）
         function goToStep2() {
             const phrase = document.getElementById('inputPhrase').value.trim();
             if (!phrase) {
@@ -261,7 +244,6 @@
             }
             currentHaikuData.phrase = phrase;
 
-            // 入力文から季語が含まれるか簡易検索
             let matched = sampleKigoDict.find(item => phrase.includes(item.kigo));
             
             if (matched) {
@@ -279,7 +261,6 @@
             goToStep(2);
         }
 
-        // ステップ2 ➔ ステップ3（プレビュー表示の生成）
         function goToStep3() {
             const kigo = document.getElementById('kigoInput').value.trim();
             const detail = document.getElementById('detailSeasonInput').value.trim();
@@ -289,11 +270,9 @@
             currentHaikuData.detailSeason = detail;
             currentHaikuData.author = author || '西田亮太';
 
-            // プレビューのセット
             document.getElementById('previewPhrase').innerText = currentHaikuData.phrase;
             document.getElementById('previewAuthor').innerText = currentHaikuData.author;
             
-            // パンくずリストのセット
             document.getElementById('bcSeason').innerText = currentHaikuData.season;
             let kigoLabel = currentHaikuData.kigo + (detail ? `（${detail}）` : '');
             document.getElementById('bcKigo').innerText = kigoLabel;
@@ -301,20 +280,18 @@
             goToStep(3);
         }
 
-        // ステップ3 ➔ 送信処理（プロトタイプ用動作）
         function submitHaiku() {
             goToStep(4);
         }
 
-        // フォームリセットして次の入力へ
         function resetForm() {
-            const textarea = document.getElementById('inputPhrase');
-            textarea.value = '';
+            const input = document.getElementById('inputPhrase');
+            input.value = '';
             document.getElementById('kigoInput').value = '';
             document.getElementById('detailSeasonInput').value = '';
-            adjustFontSize();
+            updateLiveVertical();
             goToStep(1);
-            textarea.focus();
+            input.focus();
         }
     </script>
 </body>
