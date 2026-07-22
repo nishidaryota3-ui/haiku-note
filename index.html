@@ -28,21 +28,21 @@
             width: 100%;
         }
 
-        /* 🖋️ ステップ1：縦書きリアルタイム表示エリア（画面中央・はみ出しゼロ） */
+        /* 🖋️ ステップ1：縦書きキャンバス（完全中央・絶対はみ出さない） */
         .vertical-display-area {
             flex: 1; width: 100%; display: flex; justify-content: center; align-items: center;
-            overflow: hidden; padding: 20px 0;
+            overflow: hidden; padding: 10px 0;
         }
 
         .vertical-text-preview {
             writing-mode: vertical-rl; -webkit-writing-mode: vertical-rl;
-            font-family: inherit; font-size: 3.2vh; line-height: 1.0; letter-spacing: 0.3em;
-            font-weight: 500; color: #2b2b2b; white-space: nowrap; text-align: center;
-            max-height: 100%; display: block;
+            font-family: inherit; line-height: 1.0; letter-spacing: 0.3em;
+            font-weight: 500; color: #2b2b2b; white-space: nowrap !important; text-align: center;
+            max-height: 55vh; display: block; margin: 0 auto;
         }
-        .vertical-text-preview.placeholder { color: #cccccc; }
+        .vertical-text-preview.placeholder { color: #cccccc; font-size: 2.2rem; }
 
-        /* ⌨️ ステップ1：下部スムーズ入力ボックス（重なりバグ防止） */
+        /* ⌨️ ステップ1：下部スムーズ入力ボックス */
         .input-dock {
             width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 10px;
             background: #ffffff; border: 1px solid #eae8e3; border-radius: 12px;
@@ -52,7 +52,7 @@
         .dock-input {
             width: 100%; border: none; outline: none; font-size: 1.1rem;
             font-family: inherit; background: transparent; color: #2b2b2b;
-            padding: 4px 0;
+            padding: 6px 0; border-bottom: 1px solid #eee;
         }
 
         /* 🏷️ ステップ2：季語確認フォーム */
@@ -112,12 +112,12 @@
     <div id="step1" class="step-screen active">
         <div class="step-title">【1/3】 縦書きで句を詠む</div>
         
-        <!-- 中央：縦書きプレビュー（画面枠に100%綺麗に収まります） -->
+        <!-- 中央：縦書きプレビュー（動的サイズ調整で絶対にはみ出しません） -->
         <div class="vertical-display-area">
             <p id="verticalPreview" class="vertical-text-preview placeholder">ここに句が表示されます</p>
         </div>
 
-        <!-- 下部：文字入力欄（文字重なりを完全に防ぎます） -->
+        <!-- 下部：スムーズ入力ボックス -->
         <div class="input-dock">
             <input type="text" id="inputPhrase" class="dock-input" placeholder="ここをタップして入力..." autofocus oninput="updateLiveVertical()">
             <div class="btn-group" style="margin-top: 5px;">
@@ -217,7 +217,7 @@
 
         let currentHaikuData = { phrase: '', kigo: '', detailSeason: '', season: '夏', author: '' };
 
-        // リアルタイムで中央に縦書きを反映
+        // リアルタイムで中央に縦書きを反映 ＆ 文字数に合わせて文字サイズを完全可変
         function updateLiveVertical() {
             const inputVal = document.getElementById('inputPhrase').value;
             const previewEl = document.getElementById('verticalPreview');
@@ -225,9 +225,24 @@
             if (inputVal.trim() === '') {
                 previewEl.innerText = 'ここに句が表示されます';
                 previewEl.classList.add('placeholder');
+                previewEl.style.fontSize = '2.2rem';
             } else {
                 previewEl.innerText = inputVal;
                 previewEl.classList.remove('placeholder');
+
+                // 文字数に応じてフォントサイズを縮小（上部見切れを防止）
+                const len = inputVal.length;
+                if (len <= 15) {
+                    previewEl.style.fontSize = '2.4rem';
+                } else if (len <= 20) {
+                    previewEl.style.fontSize = '1.8rem';
+                } else if (len <= 25) {
+                    previewEl.style.fontSize = '1.4rem';
+                } else if (len <= 30) {
+                    previewEl.style.fontSize = '1.1rem';
+                } else {
+                    previewEl.style.fontSize = '0.9rem';
+                }
             }
         }
 
@@ -270,7 +285,16 @@
             currentHaikuData.detailSeason = detail;
             currentHaikuData.author = author || '西田亮太';
 
-            document.getElementById('previewPhrase').innerText = currentHaikuData.phrase;
+            const pEl = document.getElementById('previewPhrase');
+            pEl.innerText = currentHaikuData.phrase;
+
+            // プレビュー画面のフォントサイズ調整
+            const len = currentHaikuData.phrase.length;
+            if (len <= 15) pEl.style.fontSize = '2.4rem';
+            else if (len <= 20) pEl.style.fontSize = '1.8rem';
+            else if (len <= 25) pEl.style.fontSize = '1.4rem';
+            else pEl.style.fontSize = '1.1rem';
+
             document.getElementById('previewAuthor').innerText = currentHaikuData.author;
             
             document.getElementById('bcSeason').innerText = currentHaikuData.season;
