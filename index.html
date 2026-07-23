@@ -26,26 +26,25 @@
             height: 100%; width: 100%; overflow: hidden; user-select: none;
         }
 
-        /* 各ステップのコンテナ（キーボード出現時に柔軟に伸縮する構造） */
+        /* 各ステップのコンテナ */
         .step-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: none; flex-direction: column; justify-content: space-between; align-items: center;
-            padding: calc(10px + env(safe-area-inset-top)) 15px calc(15px + env(safe-area-inset-bottom));
-            overflow-y: auto;
+            padding: calc(8px + env(safe-area-inset-top)) 15px calc(15px + env(safe-area-inset-bottom));
         }
         .step-screen.active { display: flex; }
 
         /* ステップ見出し */
         .step-title {
-            font-size: 0.85rem; color: #8c8476; letter-spacing: 0.15em; text-align: center; width: 100%;
+            font-size: 0.8rem; color: #8c8476; letter-spacing: 0.15em; text-align: center; width: 100%;
             padding-bottom: 2px; flex-shrink: 0;
         }
 
-        /* 🖋️ ステップ1：縦書きキャンバス（上詰めで可変対応） */
+        /* 🖋️ ステップ1：縦書きキャンバス（キーボード表示時も上部が隠れないよう最適化） */
         .vertical-display-area {
             flex: 1; width: 100%; display: flex; justify-content: center; align-items: flex-start;
-            overflow: hidden; padding-top: 0.5rem; padding-bottom: 10px; margin-bottom: 5px;
-            min-height: 120px;
+            overflow: hidden; padding-top: 0.5rem; padding-bottom: 5px; margin-bottom: 2px;
+            min-height: 100px;
         }
 
         .vertical-text-preview {
@@ -54,14 +53,14 @@
             font-weight: 500; color: #2b2b2b; white-space: nowrap !important; text-align: start;
             max-height: calc(100% - 5px); display: block; margin: 0 auto;
         }
-        .vertical-text-preview.placeholder { color: #cccccc; font-size: 1.5rem; text-align: center; }
+        .vertical-text-preview.placeholder { color: #cccccc; font-size: 1.4rem; text-align: center; }
 
         /* ⌨️ ステップ1：下部入力ボックス */
         .input-dock {
-            width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 8px;
+            width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 6px;
             background: #ffffff; border: 1px solid #eae8e3; border-radius: 12px;
             padding: 10px 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-            z-index: 10; margin-top: auto; flex-shrink: 0;
+            z-index: 10; flex-shrink: 0; margin-bottom: 5px;
         }
 
         .dock-input {
@@ -142,7 +141,8 @@
         </div>
 
         <div class="input-dock">
-            <input type="text" id="inputPhrase" class="dock-input" placeholder="ここをタップして入力..." autofocus>
+            <!-- 直接oninputを設定して確実にリアルタイム連動させます -->
+            <input type="text" id="inputPhrase" class="dock-input" placeholder="ここをタップして入力..." autofocus oninput="updateLiveVertical()" onkeyup="updateLiveVertical()">
             <div class="btn-group" style="margin-top: 2px; max-width: 100%;">
                 <button class="btn" style="width: 100%;" onclick="goToStep2()">次へ 進む ＞</button>
             </div>
@@ -271,21 +271,20 @@
             if (!inputVal || inputVal.trim() === '') {
                 previewEl.innerText = 'ここに句が表示されます';
                 previewEl.classList.add('placeholder');
-                previewEl.style.fontSize = '1.5rem';
+                previewEl.style.fontSize = '1.4rem';
             } else {
                 previewEl.innerText = inputVal;
                 previewEl.classList.remove('placeholder');
 
                 const len = inputVal.length;
-                if (len <= 15) previewEl.style.fontSize = '1.8rem';
-                else if (len <= 20) previewEl.style.fontSize = '1.35rem';
-                else if (len <= 25) previewEl.style.fontSize = '1.1rem';
-                else previewEl.style.fontSize = '0.9rem';
+                if (len <= 15) previewEl.style.fontSize = '1.7rem';
+                else if (len <= 20) previewEl.style.fontSize = '1.3rem';
+                else if (len <= 25) previewEl.style.fontSize = '1.05rem';
+                else previewEl.style.fontSize = '0.85rem';
             }
         }
 
         window.onload = function() {
-            // スプレッドシート読み込み
             const scriptKigo = document.createElement('script');
             const sheetKigoName = encodeURIComponent('歳時記データベース');
             scriptKigo.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${sheetKigoName}&range=A:H&tqx=responseHandler:kigoDataReceived`;
@@ -295,15 +294,6 @@
             const sheet1Name = encodeURIComponent('シート1');
             scriptPhrases.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${sheet1Name}&range=A:A&tqx=responseHandler:phrasesDataReceived`;
             document.body.appendChild(scriptPhrases);
-
-            // 入力イベントリスナーの確実なバインド
-            const inputEl = document.getElementById('inputPhrase');
-            if (inputEl) {
-                inputEl.addEventListener('input', updateLiveVertical);
-                inputEl.addEventListener('keyup', updateLiveVertical);
-                inputEl.addEventListener('compositionupdate', updateLiveVertical);
-                inputEl.addEventListener('change', updateLiveVertical);
-            }
         };
 
         function kigoDataReceived(data) {
@@ -437,4 +427,11 @@
             const pEl = document.getElementById('previewPhrase');
             pEl.innerText = currentHaikuData.phrase;
 
-         
+            const len = currentHaikuData.phrase.length;
+            if (len <= 15) pEl.style.fontSize = '1.7rem';
+            else if (len <= 20) pEl.style.fontSize = '1.3rem';
+            else if (len <= 25) pEl.style.fontSize = '1.05rem';
+            else pEl.style.fontSize = '0.85rem';
+
+            document.getElementById('previewAuthor').innerText = currentHaikuData.author;
+            document.
