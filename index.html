@@ -26,85 +26,88 @@
             height: 100%; width: 100%; overflow: hidden; user-select: none;
         }
 
-        /* 各ステップのコンテナ */
+        /* 各ステップのコンテナ（キーボード出現時に柔軟に伸縮する構造） */
         .step-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: none; flex-direction: column; justify-content: space-between; align-items: center;
-            padding: calc(15px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));
+            padding: calc(10px + env(safe-area-inset-top)) 15px calc(15px + env(safe-area-inset-bottom));
+            overflow-y: auto;
         }
         .step-screen.active { display: flex; }
 
         /* ステップ見出し */
         .step-title {
             font-size: 0.85rem; color: #8c8476; letter-spacing: 0.15em; text-align: center; width: 100%;
-            padding-bottom: 5px; flex-shrink: 0;
+            padding-bottom: 2px; flex-shrink: 0;
         }
 
-        /* 🖋️ ステップ1：縦書きキャンバス（上詰めで広大な縦枠を確保） */
+        /* 🖋️ ステップ1：縦書きキャンバス（上詰めで可変対応） */
         .vertical-display-area {
             flex: 1; width: 100%; display: flex; justify-content: center; align-items: flex-start;
-            overflow: hidden; padding-top: 0.8rem; padding-bottom: 15px; margin-bottom: 5px;
+            overflow: hidden; padding-top: 0.5rem; padding-bottom: 10px; margin-bottom: 5px;
+            min-height: 120px;
         }
 
         .vertical-text-preview {
             writing-mode: vertical-rl; -webkit-writing-mode: vertical-rl;
             font-family: inherit; line-height: 1.0; letter-spacing: 0.22em;
             font-weight: 500; color: #2b2b2b; white-space: nowrap !important; text-align: start;
-            max-height: calc(100% - 10px); display: block; margin: 0 auto;
+            max-height: calc(100% - 5px); display: block; margin: 0 auto;
         }
         .vertical-text-preview.placeholder { color: #cccccc; font-size: 1.5rem; text-align: center; }
 
         /* ⌨️ ステップ1：下部入力ボックス */
         .input-dock {
-            width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 10px;
+            width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 8px;
             background: #ffffff; border: 1px solid #eae8e3; border-radius: 12px;
-            padding: 12px 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            padding: 10px 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);
             z-index: 10; margin-top: auto; flex-shrink: 0;
         }
 
         .dock-input {
             width: 100%; border: none; outline: none; font-size: 1.05rem;
             font-family: inherit; background: transparent; color: #2b2b2b;
-            padding: 6px 0; border-bottom: 1px solid #eee;
+            padding: 4px 0; border-bottom: 1px solid #eee;
         }
 
         /* 🏷️ ステップ2：季語確認フォーム */
         .step2-content {
             flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;
-            overflow-y: auto;
+            overflow-y: auto; padding: 10px 0;
         }
         .kigo-check-card {
             background: #ffffff; border: 1px solid #eae8e3; border-radius: 8px;
-            padding: 20px 20px; width: 85vw; max-width: 400px; text-align: center;
+            padding: 15px 20px; width: 85vw; max-width: 400px; text-align: center;
             box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
-        .kigo-prompt { font-size: 1.05rem; color: #2b2b2b; margin-bottom: 0.8rem; line-height: 1.6; }
+        .kigo-prompt { font-size: 1.0rem; color: #2b2b2b; margin-bottom: 0.6rem; line-height: 1.5; }
         .kigo-prompt span { font-weight: bold; border-bottom: 1px solid #2b2b2b; padding-bottom: 2px; }
 
-        .form-group { margin-top: 0.8rem; text-align: left; }
-        .form-label { font-size: 0.8rem; color: #777; margin-bottom: 0.2rem; display: block; }
+        .form-group { margin-top: 0.6rem; text-align: left; }
+        .form-label { font-size: 0.78rem; color: #777; margin-bottom: 0.2rem; display: block; }
         .text-input {
-            width: 100%; padding: 8px 10px; font-size: 0.95rem; font-family: inherit;
+            width: 100%; padding: 7px 10px; font-size: 0.95rem; font-family: inherit;
             border: 1px solid #ccc; border-radius: 4px; outline: none; background: #faf9f6;
         }
         .text-input:focus { border-color: #2b2b2b; background: #fff; }
 
-        /* 👁️ ステップ3：プレビュー枠（上詰めで縦書き位置を最適化） */
+        /* 👁️ ステップ3：プレビュー枠 */
         .preview-container {
             position: relative; width: 100%; flex: 1;
             display: flex; justify-content: center; align-items: flex-start;
-            padding-top: 3.2rem; padding-bottom: 20px; overflow: hidden;
+            padding-top: 2.8rem; padding-bottom: 15px; overflow: hidden;
+            min-height: 150px;
         }
 
         .preview-breadcrumb {
-            position: absolute; top: 5px; left: 0px; right: 120px; 
+            position: absolute; top: 0px; left: 0px; right: 120px; 
             font-size: 0.8rem; color: #666666; letter-spacing: 0.05em; 
             display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.4rem;
         }
         .preview-breadcrumb span.separator { color: #b5b5b5; font-family: sans-serif; }
 
         .preview-author-tag {
-            position: absolute; top: 5px; right: 0px;
+            position: absolute; top: 0px; right: 0px;
             font-size: 1.0rem; color: #2b2b2b; letter-spacing: 0.1em; font-weight: 500;
         }
 
@@ -112,13 +115,13 @@
             writing-mode: vertical-rl; -webkit-writing-mode: vertical-rl;
             font-family: inherit; line-height: 1.0; letter-spacing: 0.22em;
             font-weight: 500; color: #2b2b2b; white-space: nowrap !important; text-align: start;
-            max-height: calc(100% - 10px); display: block; margin: 0 auto;
+            max-height: calc(100% - 5px); display: block; margin: 0 auto;
         }
 
-        /* 🔘 ボタンデザイン（1行でスタイリッシュに） */
+        /* 🔘 ボタンデザイン */
         .btn-group { display: flex; gap: 12px; justify-content: center; width: 100%; max-width: 400px; z-index: 10; flex-shrink: 0; }
         .btn {
-            flex: 1; padding: 12px 0; font-size: 0.95rem; font-family: inherit; letter-spacing: 0.15em;
+            flex: 1; padding: 11px 0; font-size: 0.95rem; font-family: inherit; letter-spacing: 0.15em;
             color: #faf9f6; background-color: #2b2b2b; border: none; border-radius: 25px;
             cursor: pointer; transition: opacity 0.2s, transform 0.1s; user-select: none;
             white-space: nowrap; text-align: center;
@@ -139,8 +142,8 @@
         </div>
 
         <div class="input-dock">
-            <input type="text" id="inputPhrase" class="dock-input" placeholder="ここをタップして入力..." autofocus oninput="updateLiveVertical()" onkeyup="updateLiveVertical()">
-            <div class="btn-group" style="margin-top: 5px; max-width: 100%;">
+            <input type="text" id="inputPhrase" class="dock-input" placeholder="ここをタップして入力..." autofocus>
+            <div class="btn-group" style="margin-top: 2px; max-width: 100%;">
                 <button class="btn" style="width: 100%;" onclick="goToStep2()">次へ 進む ＞</button>
             </div>
         </div>
@@ -257,7 +260,32 @@
 
         const seasonMapToJa = { 'haru':'春', 'natsu':'夏', 'aki':'秋', 'huyu':'冬', 'shinnen':'新年', 'muki':'無季' };
 
+        // リアルタイム縦書きプレビューの更新処理
+        function updateLiveVertical() {
+            const inputEl = document.getElementById('inputPhrase');
+            if (!inputEl) return;
+            const inputVal = inputEl.value;
+            const previewEl = document.getElementById('verticalPreview');
+            if (!previewEl) return;
+
+            if (!inputVal || inputVal.trim() === '') {
+                previewEl.innerText = 'ここに句が表示されます';
+                previewEl.classList.add('placeholder');
+                previewEl.style.fontSize = '1.5rem';
+            } else {
+                previewEl.innerText = inputVal;
+                previewEl.classList.remove('placeholder');
+
+                const len = inputVal.length;
+                if (len <= 15) previewEl.style.fontSize = '1.8rem';
+                else if (len <= 20) previewEl.style.fontSize = '1.35rem';
+                else if (len <= 25) previewEl.style.fontSize = '1.1rem';
+                else previewEl.style.fontSize = '0.9rem';
+            }
+        }
+
         window.onload = function() {
+            // スプレッドシート読み込み
             const scriptKigo = document.createElement('script');
             const sheetKigoName = encodeURIComponent('歳時記データベース');
             scriptKigo.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${sheetKigoName}&range=A:H&tqx=responseHandler:kigoDataReceived`;
@@ -268,10 +296,13 @@
             scriptPhrases.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${sheet1Name}&range=A:A&tqx=responseHandler:phrasesDataReceived`;
             document.body.appendChild(scriptPhrases);
 
+            // 入力イベントリスナーの確実なバインド
             const inputEl = document.getElementById('inputPhrase');
             if (inputEl) {
                 inputEl.addEventListener('input', updateLiveVertical);
                 inputEl.addEventListener('keyup', updateLiveVertical);
+                inputEl.addEventListener('compositionupdate', updateLiveVertical);
+                inputEl.addEventListener('change', updateLiveVertical);
             }
         };
 
@@ -320,26 +351,6 @@
                     }
                 }
             } catch (e) { console.error(e); }
-        }
-
-        function updateLiveVertical() {
-            const inputVal = document.getElementById('inputPhrase').value;
-            const previewEl = document.getElementById('verticalPreview');
-
-            if (!inputVal || inputVal.trim() === '') {
-                previewEl.innerText = 'ここに句が表示されます';
-                previewEl.classList.add('placeholder');
-                previewEl.style.fontSize = '1.5rem';
-            } else {
-                previewEl.innerText = inputVal;
-                previewEl.classList.remove('placeholder');
-
-                const len = inputVal.length;
-                if (len <= 15) previewEl.style.fontSize = '1.8rem';
-                else if (len <= 20) previewEl.style.fontSize = '1.35rem';
-                else if (len <= 25) previewEl.style.fontSize = '1.1rem';
-                else previewEl.style.fontSize = '0.9rem';
-            }
         }
 
         function goToStep(stepNum) {
@@ -426,11 +437,4 @@
             const pEl = document.getElementById('previewPhrase');
             pEl.innerText = currentHaikuData.phrase;
 
-            const len = currentHaikuData.phrase.length;
-            if (len <= 15) pEl.style.fontSize = '1.8rem';
-            else if (len <= 20) pEl.style.fontSize = '1.35rem';
-            else if (len <= 25) pEl.style.fontSize = '1.1rem';
-            else pEl.style.fontSize = '0.9rem';
-
-            document.getElementById('previewAuthor').innerText = currentHaikuData.author;
-            docu
+         
