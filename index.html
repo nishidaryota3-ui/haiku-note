@@ -138,7 +138,7 @@
         </div>
 
         <div class="input-dock">
-            <input type="text" id="inputPhrase" class="dock-input" placeholder="ここをタップして入力..." autofocus oninput="updateLiveVertical()">
+            <input type="text" id="inputPhrase" class="dock-input" placeholder="ここをタップして入力..." autofocus oninput="updateLiveVertical()" onkeyup="updateLiveVertical()">
             <div class="btn-group" style="margin-top: 5px;">
                 <button class="btn" style="width: 100%;" onclick="goToStep2()">次へ 進む ＞</button>
             </div>
@@ -266,6 +266,13 @@
             const sheet1Name = encodeURIComponent('シート1');
             scriptPhrases.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${sheet1Name}&range=A:A&tqx=responseHandler:phrasesDataReceived`;
             document.body.appendChild(scriptPhrases);
+
+            // 初期表示用イベントリスナーを追加
+            const inputEl = document.getElementById('inputPhrase');
+            if (inputEl) {
+                inputEl.addEventListener('input', updateLiveVertical);
+                inputEl.addEventListener('keyup', updateLiveVertical);
+            }
         };
 
         function kigoDataReceived(data) {
@@ -319,7 +326,7 @@
             const inputVal = document.getElementById('inputPhrase').value;
             const previewEl = document.getElementById('verticalPreview');
 
-            if (inputVal.trim() === '') {
+            if (!inputVal || inputVal.trim() === '') {
                 previewEl.innerText = 'ここに句が表示されます';
                 previewEl.classList.add('placeholder');
                 previewEl.style.fontSize = '1.5rem';
@@ -442,4 +449,35 @@
 
             fetch(GAS_WEB_APP_URL, {
                 method: 'POST',
-                header
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(currentHaikuData)
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerText = 'OK（スプレッドシートへ登録）';
+                if (data.status === 'success') {
+                    goToStep(4);
+                } else {
+                    alert('送信に失敗しました：' + data.message);
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerText = 'OK（スプレッドシートへ登録）';
+                goToStep(4);
+            });
+        }
+
+        function resetForm() {
+            const input = document.getElementById('inputPhrase');
+            input.value = '';
+            document.getElementById('kigoInput').value = '';
+            document.getElementById('detailSeasonInput').value = '';
+            updateLiveVertical();
+            goToStep(1);
+            input.focus();
+        }
+    </script>
+</body>
+</html>
