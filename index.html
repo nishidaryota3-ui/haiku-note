@@ -5,6 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>おみ句じ句帳-風月</title>
 
+    <!-- 📱 アプリ表示・アイコン設定 -->
+    <link rel="icon" href="icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#faf9f6">
+
+    <!-- 🚀 PWA（アプリとしてインストール）設定 -->
+    <link rel="manifest" href="manifest.json">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('sw.js').catch(function(err) {
+            console.log('SW registration failed: ', err);
+          });
+        });
+      }
+    </script>
+
     <style>
         /* 全体初期化 */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -67,7 +87,7 @@
         }
         .text-input:focus { border-color: #2b2b2b; background: #fff; }
 
-        /* 👁️ ステップ3：プレビュー枠（完全な真ん中配置に修正） */
+        /* 👁️ ステップ3：プレビュー枠（完全な真ん中配置） */
         .preview-container {
             position: relative; width: 100%; flex: 1;
             display: flex; justify-content: center; align-items: center;
@@ -182,10 +202,9 @@
         </div>
     </div>
 
-    <!-- ── STEP 3：プレビュー画面（完全な真ん中配置） ── -->
+    <!-- ── STEP 3：プレビュー画面 ── -->
     <div id="step3" class="step-screen">
         <div class="preview-container">
-            <!-- 上部の情報を綺麗に左右に配置する専用ヘッダー -->
             <div class="preview-header-area">
                 <div id="previewBreadcrumb" class="preview-breadcrumb">
                     <span>home</span>
@@ -199,7 +218,6 @@
                 <div id="previewAuthor" class="preview-author-tag"></div>
             </div>
 
-            <!-- 縦書き俳句本体（真ん中に配置） -->
             <p id="previewPhrase" class="preview-text-preview"></p>
         </div>
 
