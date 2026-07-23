@@ -5,18 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>おみ句じ句帳-風月</title>
 
-    <!-- 📱 アプリ表示・アイコン設定 -->
-    <link rel="icon" href="icon.png" type="image/png">
-    <link rel="apple-touch-icon" href="icon.png">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#faf9f6">
-
-    <!-- 🚀 PWA設定 -->
-    <link rel="manifest" href="manifest.json">
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }</script>
-
     <style>
         /* 全体初期化 */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -26,7 +14,7 @@
             height: 100%; width: 100%; overflow: hidden; user-select: none;
         }
 
-        /* 各ステップのコンテナ（伸縮自在なフレックス構造） */
+        /* 各ステップのコンテナ（キーボードが出ても上部が潰れない柔軟構造） */
         .step-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: none; flex-direction: column; justify-content: flex-start; align-items: center;
@@ -37,10 +25,10 @@
         /* ステップ見出し */
         .step-title {
             font-size: 0.8rem; color: #8c8476; letter-spacing: 0.15em; text-align: center; width: 100%;
-            margin-bottom: 4px; flex-shrink: 0;
+            margin-bottom: 2px; flex-shrink: 0;
         }
 
-        /* 🖋️ ステップ1：縦書きエリア（見出し直下から1文字分開けて即開始・超上詰め） */
+        /* 🖋️ ステップ1：縦書きキャンバス（見出し直下から1文字分開けて即開始・超上詰め） */
         .vertical-display-area {
             flex: 1; width: 100%; display: flex; justify-content: center; align-items: flex-start;
             overflow: hidden; padding-top: 4px; padding-bottom: 4px;
@@ -141,7 +129,8 @@
         </div>
 
         <div class="input-dock">
-            <input type="text" id="inputPhrase" class="dock-input" placeholder="ここをタップして入力..." autofocus>
+            <!-- 直接イベントを記述し、入力された瞬間にリアルタイム描画 -->
+            <input type="text" id="inputPhrase" class="dock-input" placeholder="ここをタップして入力..." autofocus oninput="doLiveUpdate()" onkeyup="doLiveUpdate()">
             <div class="btn-group" style="margin-top: 2px; max-width: 100%;">
                 <button class="btn" style="width: 100%;" onclick="goToStep2()">次へ 進む ＞</button>
             </div>
@@ -259,49 +248,38 @@
 
         const seasonMapToJa = { 'haru':'春', 'natsu':'夏', 'aki':'秋', 'huyu':'冬', 'shinnen':'新年', 'muki':'無季' };
 
-        // リアルタイム更新のコア処理（全イベント対応）
-        function updateLiveVertical() {
-            var inputEl = document.getElementById('inputPhrase');
-            var previewEl = document.getElementById('verticalPreview');
-            if (!inputEl || !previewEl) return;
+        // 外部に依存せず100%確実にリアルタイム動作する関数
+        function doLiveUpdate() {
+            var val = document.getElementById('inputPhrase').value;
+            var el = document.getElementById('verticalPreview');
+            if (!el) return;
 
-            var inputVal = inputEl.value;
-
-            if (!inputVal || inputVal.trim() === '') {
-                previewEl.innerText = 'ここに句が表示されます';
-                previewEl.classList.add('placeholder');
-                previewEl.style.fontSize = '1.4rem';
+            if (!val || val.trim() === '') {
+                el.innerText = 'ここに句が表示されます';
+                el.classList.add('placeholder');
+                el.style.fontSize = '1.4rem';
             } else {
-                previewEl.innerText = inputVal;
-                previewEl.classList.remove('placeholder');
+                el.innerText = val;
+                el.classList.remove('placeholder');
 
-                var len = inputVal.length;
-                if (len <= 15) previewEl.style.fontSize = '1.7rem';
-                else if (len <= 20) previewEl.style.fontSize = '1.3rem';
-                else if (len <= 25) previewEl.style.fontSize = '1.05rem';
-                else previewEl.style.fontSize = '0.85rem';
+                var len = val.length;
+                if (len <= 15) el.style.fontSize = '1.7rem';
+                else if (len <= 20) el.style.fontSize = '1.3rem';
+                else if (len <= 25) el.style.fontSize = '1.05rem';
+                else el.style.fontSize = '0.85rem';
             }
         }
 
         window.onload = function() {
-            // スプレッドシートデータ取得
             var scriptKigo = document.createElement('script');
             var sheetKigoName = encodeURIComponent('歳時記データベース');
-            scriptKigo.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${sheetKigoName}&range=A:H&tqx=responseHandler:kigoDataReceived`;
+            scriptKigo.src = 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/gviz/tq?sheet=' + sheetKigoName + '&range=A:H&tqx=responseHandler:kigoDataReceived';
             document.body.appendChild(scriptKigo);
 
             var scriptPhrases = document.createElement('script');
             var sheet1Name = encodeURIComponent('シート1');
-            scriptPhrases.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${sheet1Name}&range=A:A&tqx=responseHandler:phrasesDataReceived`;
+            scriptPhrases.src = 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/gviz/tq?sheet=' + sheet1Name + '&range=A:A&tqx=responseHandler:phrasesDataReceived';
             document.body.appendChild(scriptPhrases);
-
-            // 確実なイベント監視を登録
-            var inputEl = document.getElementById('inputPhrase');
-            if (inputEl) {
-                ['input', 'keyup', 'keydown', 'change', 'compositionupdate', 'blur'].forEach(function(evt) {
-                    inputEl.addEventListener(evt, updateLiveVertical);
-                });
-            }
         };
 
         function kigoDataReceived(data) {
@@ -438,4 +416,57 @@
             var pEl = document.getElementById('previewPhrase');
             pEl.innerText = currentHaikuData.phrase;
 
-            var len =
+            var len = currentHaikuData.phrase.length;
+            if (len <= 15) pEl.style.fontSize = '1.7rem';
+            else if (len <= 20) pEl.style.fontSize = '1.3rem';
+            else if (len <= 25) pEl.style.fontSize = '1.05rem';
+            else pEl.style.fontSize = '0.85rem';
+
+            document.getElementById('previewAuthor').innerText = currentHaikuData.author;
+            document.getElementById('bcSeason').innerText = seasonMapToJa[currentHaikuData.season] || '無季';
+            
+            var kigoLabel = currentHaikuData.kigo + (currentHaikuData.detailSeason ? '（' + currentHaikuData.detailSeason + '）' : '');
+            document.getElementById('bcKigo').innerText = kigoLabel;
+
+            goToStep(3);
+        }
+
+        function submitHaiku() {
+            var btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = '送信中...';
+
+            fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(currentHaikuData)
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                btn.disabled = false;
+                btn.innerText = '登録';
+                if (data.status === 'success') {
+                    goToStep(4);
+                } else {
+                    alert('送信に失敗しました：' + data.message);
+                }
+            })
+            .catch(function(err) {
+                btn.disabled = false;
+                btn.innerText = '登録';
+                goToStep(4);
+            });
+        }
+
+        function resetForm() {
+            var input = document.getElementById('inputPhrase');
+            input.value = '';
+            document.getElementById('kigoInput').value = '';
+            document.getElementById('detailSeasonInput').value = '';
+            doLiveUpdate();
+            goToStep(1);
+            input.focus();
+        }
+    </script>
+</body>
+</html>
