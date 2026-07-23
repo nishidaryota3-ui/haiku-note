@@ -87,15 +87,15 @@
         }
         .text-input:focus { border-color: #2b2b2b; background: #fff; }
 
-        /* 👁️ ステップ3：プレビュー枠（真ん中配置＆レスポンシブ） */
+        /* 👁️ ステップ3：プレビュー枠（完全中央配置・安全マージン適用） */
         .preview-container {
             position: relative; width: 100%; flex: 1;
-            display: flex; justify-content: center; align-items: center;
-            overflow: hidden; padding: 35px 0 10px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            overflow: hidden; padding: 0; margin: 10px 0;
         }
 
         .preview-header-area {
-            position: absolute; top: 5px; left: 0; right: 0;
+            position: absolute; top: 0; left: 0; right: 0;
             display: flex; justify-content: space-between; align-items: flex-start;
             padding: 0 5px; pointer-events: none; z-index: 5;
         }
@@ -116,13 +116,12 @@
             writing-mode: vertical-rl; -webkit-writing-mode: vertical-rl;
             font-family: inherit; line-height: 1.0; letter-spacing: 0.25em;
             font-weight: 500; color: #2b2b2b; white-space: nowrap !important; text-align: center;
-            max-height: 48vh; display: block; margin: 0 auto;
+            max-height: 42vh; display: block; margin: auto;
         }
 
         /* 📱 スマホ（縦幅が狭い端末）専用レスポンシブ調整 */
         @media screen and (max-height: 700px) {
-            .preview-container { padding: 30px 0 5px; }
-            .preview-text-preview { max-height: 42vh; }
+            .preview-text-preview { max-height: 36vh; }
         }
 
         /* 🔘 ボタンデザイン */
@@ -332,7 +331,6 @@
             } catch (e) { console.error(e); }
         }
 
-        // 🔍 手入力された季語を歳時記DBと逆照合して自動補完する関数
         function checkAndHokanKigoData() {
             try {
                 var el = document.getElementById('kigoInput');
@@ -386,7 +384,6 @@
 
             currentHaikuData.phrase = phrase;
 
-            // 内部検索処理（エラーが起きても画面遷移を絶対に阻害しない）
             try {
                 var matched = null;
                 var matchedWordLength = 0;
@@ -429,7 +426,6 @@
                 console.error(e);
             }
 
-            // 何があっても必ずステップ2へ画面移動
             goToStep(2);
         }
 
@@ -478,13 +474,13 @@
                 var isSmallScreen = (window.innerHeight <= 700);
 
                 if (len <= 15) {
-                    pEl.style.fontSize = isSmallScreen ? '1.55rem' : '1.8rem';
+                    pEl.style.fontSize = isSmallScreen ? '1.4rem' : '1.7rem';
                 } else if (len <= 20) {
-                    pEl.style.fontSize = isSmallScreen ? '1.25rem' : '1.4rem';
+                    pEl.style.fontSize = isSmallScreen ? '1.15rem' : '1.35rem';
                 } else if (len <= 25) {
-                    pEl.style.fontSize = isSmallScreen ? '0.98rem' : '1.1rem';
+                    pEl.style.fontSize = isSmallScreen ? '0.92rem' : '1.05rem';
                 } else {
-                    pEl.style.fontSize = isSmallScreen ? '0.8rem' : '0.9rem';
+                    pEl.style.fontSize = isSmallScreen ? '0.78rem' : '0.88rem';
                 }
 
                 document.getElementById('previewAuthor').innerText = currentHaikuData.author;
