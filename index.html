@@ -67,24 +67,25 @@
         /* 🏷️ ステップ2：季語確認フォーム */
         .step2-content {
             flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;
+            overflow-y: auto;
         }
         .kigo-check-card {
             background: #ffffff; border: 1px solid #eae8e3; border-radius: 8px;
-            padding: 25px 20px; width: 85vw; max-width: 400px; text-align: center;
+            padding: 20px 20px; width: 85vw; max-width: 400px; text-align: center;
             box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
-        .kigo-prompt { font-size: 1.05rem; color: #2b2b2b; margin-bottom: 1.0rem; line-height: 1.6; }
+        .kigo-prompt { font-size: 1.05rem; color: #2b2b2b; margin-bottom: 0.8rem; line-height: 1.6; }
         .kigo-prompt span { font-weight: bold; border-bottom: 1px solid #2b2b2b; padding-bottom: 2px; }
 
-        .form-group { margin-top: 1.0rem; text-align: left; }
-        .form-label { font-size: 0.8rem; color: #777; margin-bottom: 0.3rem; display: block; }
+        .form-group { margin-top: 0.8rem; text-align: left; }
+        .form-label { font-size: 0.8rem; color: #777; margin-bottom: 0.2rem; display: block; }
         .text-input {
             width: 100%; padding: 8px 10px; font-size: 0.95rem; font-family: inherit;
             border: 1px solid #ccc; border-radius: 4px; outline: none; background: #faf9f6;
         }
         .text-input:focus { border-color: #2b2b2b; background: #fff; }
 
-        /* 👁️ ステップ3：季寄せ風サンプルプレビュー枠 */
+        /* 👁️ ステップ3：プレビュー枠 */
         .preview-container {
             position: relative; width: 100%; flex: 1;
             display: flex; justify-content: center; align-items: center;
@@ -154,7 +155,7 @@
                 
                 <div class="form-group">
                     <label class="form-label">季語</label>
-                    <input type="text" id="kigoInput" class="text-input" placeholder="例：裸">
+                    <input type="text" id="kigoInput" class="text-input" placeholder="例：古池">
                 </div>
 
                 <div class="form-group">
@@ -178,6 +179,11 @@
                     <label class="form-label">作者名</label>
                     <input type="text" id="authorInput" class="text-input" value="西田亮太">
                 </div>
+
+                <div class="form-group">
+                    <label class="form-label">作者よみがな</label>
+                    <input type="text" id="authorKanaInput" class="text-input" value="にしだりょうた">
+                </div>
             </div>
         </div>
 
@@ -187,7 +193,7 @@
         </div>
     </div>
 
-    <!-- ── STEP 3：季寄せ風サンプルプレビュー画面 ── -->
+    <!-- ── STEP 3：プレビュー画面 ── -->
     <div id="step3" class="step-screen">
         <div class="preview-container">
             <div id="previewBreadcrumb" class="preview-breadcrumb">
@@ -197,7 +203,7 @@
                 <span class="separator">&lt;</span>
                 <span id="bcSeason">夏</span>
                 <span class="separator">&lt;</span>
-                <span id="bcKigo" style="font-weight: bold;">裸（三夏）</span>
+                <span id="bcKigo" style="font-weight: bold;">蛙（三夏）</span>
             </div>
 
             <div id="previewAuthor" class="preview-author-tag"></div>
@@ -224,13 +230,25 @@
     </div>
 
     <script>
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKMtaJ230BSXo1xGiN-ni9bKIUaXh_TceCTAAjnU9DzcDBtuGrt4sa8Z6VbYF212ZK/exec';
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwgm4eh8qZGRxvFS8_b8iEJAC9vRGw31gOvjgsPQMPc1ymU4oKonErvUkL0Ucf6xnZO/exec';
         const SPREADSHEET_ID = '1m0y8AOJNx1Ad4I44poPheQAQNki1-QQIwi9wSw8jaBg';
 
         let kigoDatabase = [];
         let existingPhrases = []; 
         let autoDetectedParentKigo = '';
-        let currentHaikuData = { phrase: '', kigo: '', parentKigo: '', detailSeason: '', season: 'natsu', author: '', manualKigo: '' };
+        let autoDetectedKigoKana = '';
+
+        let currentHaikuData = {
+            phrase: '',
+            author: '',
+            authorKana: '',
+            kigo: '',
+            parentKigo: '',
+            kigoKana: '',
+            season: 'natsu',
+            detailSeason: '',
+            manualKigo: ''
+        };
 
         const seasonMapToJa = { 'haru':'春', 'natsu':'夏', 'aki':'秋', 'huyu':'冬', 'shinnen':'新年', 'muki':'無季' };
 
@@ -256,6 +274,7 @@
                     let seasonVal    = c[0] && c[0].v ? String(c[0].v).trim() : 'muki';
                     let detailSeason = c[1] && c[1].v ? String(c[1].v).trim() : '';
                     let parentKigo   = c[2] && c[2].v ? String(c[2].v).trim() : '';
+                    let kigoKana     = c[3] && c[3].v ? String(c[3].v).trim() : '';
                     let childKigo    = c[4] && c[4].v ? String(c[4].v).trim() : '';
 
                     let normalizedSeason = 'muki';
@@ -270,6 +289,7 @@
                         kigoDatabase.push({
                             parentKigo: parentKigo,
                             childKigo: childKigo || parentKigo,
+                            kigoKana: kigoKana,
                             detailSeason: detailSeason,
                             season: normalizedSeason
                         });
@@ -289,32 +309,6 @@
                     }
                 }
             } catch (e) { console.error(e); }
-        }
-
-        function getSimilarity(str1, str2) {
-            const s1 = str1.replace(/\s+/g, '');
-            const s2 = str2.replace(/\s+/g, '');
-            const len1 = s1.length;
-            const len2 = s2.length;
-            if (len1 === 0 || len2 === 0) return 0;
-
-            const matrix = Array.from({ length: len1 + 1 }, () => Array(len2 + 1).fill(0));
-            for (let i = 0; i <= len1; i++) matrix[i][0] = i;
-            for (let j = 0; j <= len2; j++) matrix[0][j] = j;
-
-            for (let i = 1; i <= len1; i++) {
-                for (let j = 1; j <= len2; j++) {
-                    const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
-                    matrix[i][j] = Math.min(
-                        matrix[i - 1][j] + 1,
-                        matrix[i][j - 1] + 1,
-                        matrix[i - 1][j - 1] + cost
-                    );
-                }
-            }
-            const distance = matrix[len1][len2];
-            const maxLen = Math.max(len1, len2);
-            return (1 - distance / maxLen) * 100;
         }
 
         function updateLiveVertical() {
@@ -346,26 +340,6 @@
             const phrase = document.getElementById('inputPhrase').value.trim();
             if (!phrase) { alert('句を入力してください。'); return; }
 
-            let duplicateFound = null;
-            let highestSimilarity = 0;
-
-            for (let existing of existingPhrases) {
-                let similarity = getSimilarity(phrase, existing);
-                if (similarity >= 80) {
-                    if (similarity > highestSimilarity) {
-                        highestSimilarity = similarity;
-                        duplicateFound = existing;
-                    }
-                }
-            }
-
-            if (duplicateFound) {
-                const proceed = confirm(
-                    `【類似俳句のアラーム】\n\n入力された句は、すでに登録されている以下の俳句と ${Math.round(highestSimilarity)}% 一致しています：\n\n『${duplicateFound}』\n\nこのまま登録を進めますか？`
-                );
-                if (!proceed) return;
-            }
-
             currentHaikuData.phrase = phrase;
 
             let matched = null;
@@ -384,7 +358,8 @@
             }
 
             if (matched) {
-                autoDetectedParentKigo = matched.parentKigo || '季語あり';
+                autoDetectedParentKigo = matched.parentKigo || '';
+                autoDetectedKigoKana = matched.kigoKana || '';
                 let displayDetail = matched.detailSeason || '';
                 
                 document.getElementById('detectedKigoText').innerHTML = `<span>${autoDetectedParentKigo}</span>（${displayDetail || '登録済'}）`;
@@ -393,6 +368,7 @@
                 document.getElementById('detailSeasonInput').value = displayDetail;
             } else {
                 autoDetectedParentKigo = '';
+                autoDetectedKigoKana = '';
                 document.getElementById('detectedKigoText').innerHTML = '自動検出できませんでした<br><span style="font-size:0.85rem; font-weight:normal; color:#777;">（直接入力してください）</span>';
                 document.getElementById('kigoInput').value = '';
                 document.getElementById('seasonSelect').value = 'muki';
@@ -404,16 +380,37 @@
 
         function goToStep3() {
             const inputKigo = document.getElementById('kigoInput').value.trim();
-            currentHaikuData.kigo = inputKigo || '無季';
-            currentHaikuData.parentKigo = inputKigo;
-            currentHaikuData.season = document.getElementById('seasonSelect').value;
-            currentHaikuData.detailSeason = document.getElementById('detailSeasonInput').value.trim();
             currentHaikuData.author = document.getElementById('authorInput').value.trim() || '西田亮太';
-
-            if (inputKigo && inputKigo !== autoDetectedParentKigo) {
-                currentHaikuData.manualKigo = inputKigo;
-            } else {
+            currentHaikuData.authorKana = document.getElementById('authorKanaInput').value.trim() || 'にしだりょうた';
+            
+            if (inputKigo === '') {
+                currentHaikuData.kigo = '無季';
+                currentHaikuData.parentKigo = '無季';
+                currentHaikuData.kigoKana = 'むき';
+                currentHaikuData.season = 'muki';
+                currentHaikuData.detailSeason = '無季';
                 currentHaikuData.manualKigo = '';
+            } else {
+                currentHaikuData.kigo = inputKigo;
+                currentHaikuData.parentKigo = inputKigo;
+                currentHaikuData.season = document.getElementById('seasonSelect').value;
+                currentHaikuData.detailSeason = document.getElementById('detailSeasonInput').value.trim();
+
+                // 季語のよみがな（F列）を検索してセット
+                let matchedKana = '';
+                for (let item of kigoDatabase) {
+                    if (item.parentKigo === inputKigo || item.childKigo === inputKigo) {
+                        matchedKana = item.kigoKana;
+                        break;
+                    }
+                }
+                currentHaikuData.kigoKana = matchedKana || autoDetectedKigoKana || 'むき';
+
+                if (inputKigo !== autoDetectedParentKigo) {
+                    currentHaikuData.manualKigo = inputKigo;
+                } else {
+                    currentHaikuData.manualKigo = '';
+                }
             }
 
             const pEl = document.getElementById('previewPhrase');
@@ -449,7 +446,6 @@
                 btn.disabled = false;
                 btn.innerText = 'OK（スプレッドシートへ登録）';
                 if (data.status === 'success') {
-                    existingPhrases.push(currentHaikuData.phrase);
                     goToStep(4);
                 } else {
                     alert('送信に失敗しました：' + data.message);
@@ -458,7 +454,6 @@
             .catch(err => {
                 btn.disabled = false;
                 btn.innerText = 'OK（スプレッドシートへ登録）';
-                existingPhrases.push(currentHaikuData.phrase);
                 goToStep(4);
             });
         }
