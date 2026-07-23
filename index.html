@@ -341,14 +341,13 @@
                     break;
                 }
                 var subWords = item.childKigo.split(/[,、\s]+/);
-                if (subWords.includes(val)) {
+                if (subWords.indexOf(val) !== -1) {
                     matched = item;
                     break;
                 }
             }
 
             if (matched) {
-                // 親季語表記に自動統一し、属性を自動補完
                 document.getElementById('kigoInput').value = matched.parentKigo;
                 document.getElementById('seasonSelect').value = matched.season;
                 document.getElementById('detailSeasonInput').value = matched.detailSeason || '';
@@ -405,7 +404,6 @@
         }
 
         function goToStep3() {
-            // ステップ3へ進む前にも念のため逆引き補完を実行
             checkAnd補完KigoData();
 
             var inputKigo = document.getElementById('kigoInput').value.trim();
@@ -446,9 +444,10 @@
             pEl.innerText = currentHaikuData.phrase;
 
             var len = currentHaikuData.phrase.length;
-            var isSmallScreen = window.innerHeight <= 700;
+            var isSmallScreen = (window.innerHeight <= 700);
 
             if (len <= 15) {
                 pEl.style.fontSize = isSmallScreen ? '1.55rem' : '1.8rem';
             } else if (len <= 20) {
-                pEl.style.fontSize = is
+                pEl.style.fontSize = isSmallScreen ? '1.25rem' : '1.4rem';
+            } else if (len <= 25) 
