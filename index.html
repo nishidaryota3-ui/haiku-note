@@ -40,7 +40,7 @@
             display: none; flex-direction: column; justify-content: space-between; align-items: center;
             padding: calc(15px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));
         }
-        .step-screen.active { display: flex; }
+        .step-screen.active { display: flex !important; }
 
         /* ステップ見出し */
         .step-title {
@@ -332,13 +332,13 @@
             } catch (e) { console.error(e); }
         }
 
-        // 🔍 手入力された季語を歳時記DBと逆照合して自動補完する関数（安全ガード追加）
+        // 🔍 手入力された季語を歳時記DBと逆照合して自動補完する関数
         function checkAndHokanKigoData() {
             try {
                 var el = document.getElementById('kigoInput');
                 if (!el) return;
                 var val = el.value.trim();
-                if (!val || kigoDatabase.length === 0) return;
+                if (!val || !kigoDatabase || kigoDatabase.length === 0) return;
 
                 var matched = null;
                 for (var i = 0; i < kigoDatabase.length; i++) {
@@ -366,25 +366,28 @@
         }
 
         function goToStep(stepNum) {
-            try {
-                var screens = document.querySelectorAll('.step-screen');
-                for (var i = 0; i < screens.length; i++) {
-                    screens[i].classList.remove('active');
-                }
-                var target = document.getElementById('step' + stepNum);
-                if (target) target.classList.add('active');
-            } catch (e) { console.error(e); }
+            var screens = document.querySelectorAll('.step-screen');
+            for (var i = 0; i < screens.length; i++) {
+                screens[i].classList.remove('active');
+            }
+            var target = document.getElementById('step' + stepNum);
+            if (target) {
+                target.classList.add('active');
+            }
         }
 
         function goToStep2() {
+            var inputEl = document.getElementById('inputPhrase');
+            var phrase = inputEl ? inputEl.value.trim() : '';
+            if (!phrase) { 
+                alert('句を入力してください。'); 
+                return; 
+            }
+
+            currentHaikuData.phrase = phrase;
+
+            // 内部検索処理（エラーが起きても画面遷移を絶対に阻害しない）
             try {
-                var inputEl = document.getElementById('inputPhrase');
-                if (!inputEl) return;
-                var phrase = inputEl.value.trim();
-                if (!phrase) { alert('句を入力してください。'); return; }
-
-                currentHaikuData.phrase = phrase;
-
                 var matched = null;
                 var matchedWordLength = 0;
 
@@ -422,12 +425,12 @@
                     document.getElementById('seasonSelect').value = 'muki';
                     document.getElementById('detailSeasonInput').value = '';
                 }
-
-                goToStep(2);
-            } catch (err) {
-                console.error(err);
-                goToStep(2); // 万が一エラーが起きても強制的に画面遷移
+            } catch (e) {
+                console.error(e);
             }
+
+            // 何があっても必ずステップ2へ画面移動
+            goToStep(2);
         }
 
         function goToStep3() {
@@ -444,4 +447,93 @@
                     currentHaikuData.kigoKana = 'むき';
                     currentHaikuData.season = 'muki';
                     currentHaikuData.detailSeason = '無季';
+                    currentHaikuData.manualKigo = '';
+                } else {
+                    currentHaikuData.kigo = inputKigo;
+                    currentHaikuData.parentKigo = inputKigo;
+                    currentHaikuData.season = document.getElementById('seasonSelect').value;
+                    currentHaikuData.detailSeason = document.getElementById('detailSeasonInput').value.trim();
+
+                    var matchedKana = '';
+                    for (var i = 0; i < kigoDatabase.length; i++) {
+                        var item = kigoDatabase[i];
+                        if (item && (item.parentKigo === inputKigo || item.childKigo === inputKigo)) {
+                            matchedKana = item.kigoKana;
+                            break;
+                        }
+                    }
+                    currentHaikuData.kigoKana = matchedKana || autoDetectedKigoKana || 'むき';
+
+                    if (inputKigo !== autoDetectedParentKigo) {
+                        currentHaikuData.manualKigo = inputKigo;
+                    } else {
+                        currentHaikuData.manualKigo = '';
+                    }
+                }
+
+                var pEl = document.getElementById('previewPhrase');
+                pEl.innerText = currentHaikuData.phrase;
+
+                var len = currentHaikuData.phrase.length;
+                var isSmallScreen = (window.innerHeight <= 700);
+
+                if (len <= 15) {
+                    pEl.style.fontSize = isSmallScreen ? '1.55rem' : '1.8rem';
+                } else if (len <= 20) {
+                    pEl.style.fontSize = isSmallScreen ? '1.25rem' : '1.4rem';
+                } else if (len <= 25) {
+                    pEl.style.fontSize = isSmallScreen ? '0.98rem' : '1.1rem';
+                } else {
+                    pEl.style.fontSize = isSmallScreen ? '0.8rem' : '0.9rem';
+                }
+
+                document.getElementById('previewAuthor').innerText = currentHaikuData.author;
+                document.getElementById('bcSeason').innerText = seasonMapToJa[currentHaikuData.season] || '無季';
                 
+                var kigoLabel = currentHaikuData.kigo + (currentHaikuData.detailSeason ? '（' + currentHaikuData.detailSeason + '）' : '');
+                document.getElementById('bcKigo').innerText = kigoLabel;
+            } catch (e) {
+                console.error(e);
+            }
+
+            goToStep(3);
+        }
+
+        function submitHaiku() {
+            var btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = '送信中...';
+
+            fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(currentHaikuData)
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                btn.disabled = false;
+                btn.innerText = '登録';
+                if (data.status === 'success') {
+                    goToStep(4);
+                } else {
+                    alert('送信に失敗しました：' + data.message);
+                }
+            })
+            .catch(function(err) {
+                btn.disabled = false;
+                btn.innerText = '登録';
+                goToStep(4);
+            });
+        }
+
+        function resetForm() {
+            var input = document.getElementById('inputPhrase');
+            if (input) input.value = '';
+            document.getElementById('kigoInput').value = '';
+            document.getElementById('detailSeasonInput').value = '';
+            goToStep(1);
+            if (input) input.focus();
+        }
+    </script>
+</body>
+</html>
