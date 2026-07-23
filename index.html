@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>句詠み・詠み溜め帳</title>
+    <title>おみ句じ句帳-風月</title>
+
+    <!-- 📱 アプリ表示・アイコン設定 -->
+    <link rel="icon" href="icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#faf9f6">
 
     <style>
         /* 全体初期化 */
@@ -27,17 +35,17 @@
             font-size: 0.85rem; color: #8c8476; letter-spacing: 0.15em; text-align: center; width: 100%;
         }
 
-        /* 🖋️ ステップ1：縦書きキャンバス */
+        /* 🖋️ ステップ1：縦書きキャンバス（下部入力ボックスと絶対被らない設計） */
         .vertical-display-area {
             flex: 1; width: 100%; display: flex; justify-content: center; align-items: center;
-            overflow: hidden; padding: 10px 0;
+            overflow: hidden; padding-top: 10px; padding-bottom: 15px; margin-bottom: 5px;
         }
 
         .vertical-text-preview {
             writing-mode: vertical-rl; -webkit-writing-mode: vertical-rl;
             font-family: inherit; line-height: 1.0; letter-spacing: 0.3em;
             font-weight: 500; color: #2b2b2b; white-space: nowrap !important; text-align: center;
-            max-height: 55vh; display: block; margin: 0 auto;
+            max-height: 48vh; display: block; margin: 0 auto;
         }
         .vertical-text-preview.placeholder { color: #cccccc; font-size: 2.2rem; }
 
@@ -46,6 +54,7 @@
             width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 10px;
             background: #ffffff; border: 1px solid #eae8e3; border-radius: 12px;
             padding: 12px 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            z-index: 10;
         }
 
         .dock-input {
@@ -136,7 +145,7 @@
                 
                 <div class="form-group">
                     <label class="form-label">季語</label>
-                    <input type="text" id="kigoInput" class="text-input" placeholder="例：夏の雨">
+                    <input type="text" id="kigoInput" class="text-input" placeholder="例：サングラス">
                 </div>
 
                 <div class="form-group">
@@ -179,7 +188,7 @@
                 <span class="separator">&lt;</span>
                 <span id="bcSeason">夏</span>
                 <span class="separator">&lt;</span>
-                <span id="bcKigo" style="font-weight: bold;">夏の雨（三夏）</span>
+                <span id="bcKigo" style="font-weight: bold;">サングラス（三夏）</span>
             </div>
 
             <div id="previewAuthor" class="preview-author-tag"></div>
@@ -206,18 +215,26 @@
     </div>
 
     <script>
-        // ★ここにSTEP 1で取得したGoogle Apps ScriptのURLを貼り付けます
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwLBqsqlwp3BW86PRHB6i-K9X4O-1jtd33HSqlo9iD1qw4qc6ILb6-2nvcPuQtQcRr7/exec';
+        // ★ご自身のGASのWebアプリURLを設定してください
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzHXzTxO9ib26ESJ6IutSqHQWR8NmTQ40EtOnDhv-IQhkrHfZq85GO5V52HE0FUgtMv/exec';
         const SPREADSHEET_ID = '1m0y8AOJNx1Ad4I44poPheQAQNki1-QQIwi9wSw8jaBg';
 
         let kigoDatabase = [];
+        let existingPhrases = []; // 重複チェック用の既知の俳句データ
         let currentHaikuData = { phrase: '', kigo: '', detailSeason: '', season: 'natsu', author: '' };
 
-        // データベースから既存の季語一覧を取得（自動判定用）
         window.onload = function() {
-            const script = document.createElement('script');
-            script.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?range=A:H&tqx=responseHandler:kigoDataReceived`;
-            document.body.appendChild(script);
+            // 1. 「歳時記データベース」から季語一覧を取得
+            const scriptKigo = document.createElement('script');
+            const sheetKigoName = encodeURIComponent('歳時記データベース');
+            scriptKigo.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${sheetKigoName}&range=A:H&tqx=responseHandler:kigoDataReceived`;
+            document.body.appendChild(scriptKigo);
+
+            // 2. 「シート1」から既存俳句一覧を取得（重複チェック用）
+            const scriptPhrases = document.createElement('script');
+            const sheet1Name = encodeURIComponent('シート1');
+            scriptPhrases.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${sheet1Name}&range=A:A&tqx=responseHandler:phrasesDataReceived`;
+            document.body.appendChild(scriptPhrases);
         };
 
         function kigoDataReceived(data) {
@@ -225,8 +242,8 @@
                 const rows = data.table.rows;
                 for (let i = 0; i < rows.length; i++) {
                     const c = rows[i].c;
-                    if (!c || !c[3] || !c[3].v) continue;
-                    let kigoStr = String(c[3].v).trim();
+                    if (!c) continue;
+                    let kigoStr = c[3] && c[3].v ? String(c[3].v).trim() : (c[0] && c[0].v ? String(c[0].v).trim() : '');
                     let seasonStr = c[6] && c[6].v ? String(c[6].v).trim().toLowerCase() : 'muki';
                     let detailStr = c[7] && c[7].v ? String(c[7].v).trim() : '';
                     if (kigoStr && !kigoDatabase.some(k => k.kigo === kigoStr)) {
@@ -234,6 +251,46 @@
                     }
                 }
             } catch (e) { console.error(e); }
+        }
+
+        function phrasesDataReceived(data) {
+            try {
+                const rows = data.table.rows;
+                for (let i = 0; i < rows.length; i++) {
+                    const c = rows[i].c;
+                    if (c && c[0] && c[0].v) {
+                        let phraseStr = String(c[0].v).trim();
+                        if (phraseStr) existingPhrases.push(phraseStr);
+                    }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        /* ── 文字列類似度（レーベンシュタイン距離）の計算アルゴリズム ── */
+        function getSimilarity(str1, str2) {
+            const s1 = str1.replace(/\s+/g, '');
+            const s2 = str2.replace(/\s+/g, '');
+            const len1 = s1.length;
+            const len2 = s2.length;
+            if (len1 === 0 || len2 === 0) return 0;
+
+            const matrix = Array.from({ length: len1 + 1 }, () => Array(len2 + 1).fill(0));
+            for (let i = 0; i <= len1; i++) matrix[i][0] = i;
+            for (let j = 0; j <= len2; j++) matrix[0][j] = j;
+
+            for (let i = 1; i <= len1; i++) {
+                for (let j = 1; j <= len2; j++) {
+                    const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j] + 1,
+                        matrix[i][j - 1] + 1,
+                        matrix[i - 1][j - 1] + cost
+                    );
+                }
+            }
+            const distance = matrix[len1][len2];
+            const maxLen = Math.max(len1, len2);
+            return (1 - distance / maxLen) * 100;
         }
 
         function updateLiveVertical() {
@@ -265,18 +322,40 @@
         function goToStep2() {
             const phrase = document.getElementById('inputPhrase').value.trim();
             if (!phrase) { alert('句を入力してください。'); return; }
+
+            // 🔍 既存データとの80%以上類似度重複チェック
+            let duplicateFound = null;
+            let highestSimilarity = 0;
+
+            for (let existing of existingPhrases) {
+                let similarity = getSimilarity(phrase, existing);
+                if (similarity >= 80) {
+                    if (similarity > highestSimilarity) {
+                        highestSimilarity = similarity;
+                        duplicateFound = existing;
+                    }
+                }
+            }
+
+            if (duplicateFound) {
+                const proceed = confirm(
+                    `【類似俳句のアラーム】\n\n入力された句は、すでに登録されている以下の俳句と ${Math.round(highestSimilarity)}% 一致しています：\n\n『${duplicateFound}』\n\nこのまま登録を進めますか？`
+                );
+                if (!proceed) return; // キャンセルされた場合は進まない
+            }
+
             currentHaikuData.phrase = phrase;
 
-            // スプレッドシートの季語と照合
+            // 季語の自動判定
             let matched = kigoDatabase.find(item => phrase.includes(item.kigo));
             
             if (matched) {
-                document.getElementById('detectedKigoText').innerText = `${matched.kigo}（${matched.detail || '登録済'}）`;
+                document.getElementById('detectedKigoText').innerHTML = `<span>${matched.kigo}</span>（${matched.detail || '登録済'}）`;
                 document.getElementById('kigoInput').value = matched.kigo;
                 document.getElementById('detailSeasonInput').value = matched.detail;
                 document.getElementById('seasonSelect').value = matched.season;
             } else {
-                document.getElementById('detectedKigoText').innerText = '自動検出できませんでした（手動入力してください）';
+                document.getElementById('detectedKigoText').innerHTML = '自動検出できませんでした<br><span style="font-size:0.85rem; font-weight:normal; color:#777;">（直接入力してください）</span>';
                 document.getElementById('kigoInput').value = '';
                 document.getElementById('detailSeasonInput').value = '';
                 document.getElementById('seasonSelect').value = 'muki';
@@ -310,7 +389,6 @@
             goToStep(3);
         }
 
-        // 本番：スプレッドシートへ直接登録送信
         function submitHaiku() {
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
@@ -326,6 +404,8 @@
                 btn.disabled = false;
                 btn.innerText = 'OK（スプレッドシートへ登録）';
                 if (data.status === 'success') {
+                    // 完了時に今回の句をローカルメモリにも追加（連続入力時の判定用）
+                    existingPhrases.push(currentHaikuData.phrase);
                     goToStep(4);
                 } else {
                     alert('送信に失敗しました：' + data.message);
@@ -334,7 +414,7 @@
             .catch(err => {
                 btn.disabled = false;
                 btn.innerText = 'OK（スプレッドシートへ登録）';
-                // CORS仕様対策：成功していてもcatchに入る場合があるため確認して次へ
+                existingPhrases.push(currentHaikuData.phrase);
                 goToStep(4);
             });
         }
