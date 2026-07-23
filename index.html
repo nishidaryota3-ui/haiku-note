@@ -33,32 +33,33 @@
         /* ステップ見出し */
         .step-title {
             font-size: 0.85rem; color: #8c8476; letter-spacing: 0.15em; text-align: center; width: 100%;
+            padding-bottom: 5px;
         }
 
-        /* 🖋️ ステップ1：縦書きキャンバス（入力ボックスと絶対重ならない安全設計） */
+        /* 🖋️ ステップ1：縦書きキャンバス（入力ボックスの上に完全に収める） */
         .vertical-display-area {
             flex: 1; width: 100%; display: flex; justify-content: center; align-items: center;
-            overflow: hidden; padding-top: 5px; padding-bottom: 25px; margin-bottom: 10px;
+            overflow: hidden; padding: 10px 0; margin-bottom: 10px;
         }
 
         .vertical-text-preview {
             writing-mode: vertical-rl; -webkit-writing-mode: vertical-rl;
-            font-family: inherit; line-height: 1.0; letter-spacing: 0.3em;
+            font-family: inherit; line-height: 1.0; letter-spacing: 0.25em;
             font-weight: 500; color: #2b2b2b; white-space: nowrap !important; text-align: center;
-            max-height: 42vh; display: block; margin: 0 auto;
+            max-height: 32vh; display: block; margin: 0 auto;
         }
-        .vertical-text-preview.placeholder { color: #cccccc; font-size: 2.2rem; }
+        .vertical-text-preview.placeholder { color: #cccccc; font-size: 1.5rem; }
 
         /* ⌨️ ステップ1：下部入力ボックス */
         .input-dock {
             width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 10px;
             background: #ffffff; border: 1px solid #eae8e3; border-radius: 12px;
             padding: 12px 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-            z-index: 10;
+            z-index: 10; margin-top: auto;
         }
 
         .dock-input {
-            width: 100%; border: none; outline: none; font-size: 1.1rem;
+            width: 100%; border: none; outline: none; font-size: 1.05rem;
             font-family: inherit; background: transparent; color: #2b2b2b;
             padding: 6px 0; border-bottom: 1px solid #eee;
         }
@@ -87,6 +88,7 @@
         .preview-container {
             position: relative; width: 100%; flex: 1;
             display: flex; justify-content: center; align-items: center;
+            padding-bottom: 20px;
         }
 
         .preview-breadcrumb {
@@ -101,8 +103,15 @@
             font-size: 1.05rem; color: #2b2b2b; letter-spacing: 0.1em; font-weight: 500;
         }
 
+        .preview-text-preview {
+            writing-mode: vertical-rl; -webkit-writing-mode: vertical-rl;
+            font-family: inherit; line-height: 1.0; letter-spacing: 0.25em;
+            font-weight: 500; color: #2b2b2b; white-space: nowrap !important; text-align: center;
+            max-height: 38vh; display: block; margin: 0 auto;
+        }
+
         /* 🔘 ボタンデザイン */
-        .btn-group { display: flex; gap: 15px; justify-content: center; width: 100%; }
+        .btn-group { display: flex; gap: 15px; justify-content: center; width: 100%; z-index: 10; }
         .btn {
             padding: 12px 30px; font-size: 0.95rem; font-family: inherit; letter-spacing: 0.1em;
             color: #faf9f6; background-color: #2b2b2b; border: none; border-radius: 25px;
@@ -151,12 +160,12 @@
                 <div class="form-group">
                     <label class="form-label">季節</label>
                     <select id="seasonSelect" class="text-input">
-                        <option value="haru">春</option>
-                        <option value="natsu">夏</option>
-                        <option value="aki">秋</option>
-                        <option value="huyu">冬</option>
-                        <option value="shinnen">新年</option>
-                        <option value="muki">無季</option>
+                        <option value="春">春</option>
+                        <option value="夏">夏</option>
+                        <option value="秋">秋</option>
+                        <option value="冬">冬</option>
+                        <option value="新年">新年</option>
+                        <option value="無季">無季</option>
                     </select>
                 </div>
                 
@@ -192,7 +201,7 @@
             </div>
 
             <div id="previewAuthor" class="preview-author-tag"></div>
-            <p id="previewPhrase" class="vertical-text-preview"></p>
+            <p id="previewPhrase" class="preview-text-preview"></p>
         </div>
 
         <div class="btn-group">
@@ -220,16 +229,16 @@
 
         let kigoDatabase = [];
         let existingPhrases = []; 
-        let currentHaikuData = { phrase: '', kigo: '', detailSeason: '', season: 'natsu', author: '' };
+        let currentHaikuData = { phrase: '', kigo: '', detailSeason: '', season: '夏', author: '' };
 
         window.onload = function() {
-            // 1. 「歳時記データベース」から季語情報を取得（A:H全列）
+            // 1. 「歳時記データベース」から季語情報を取得
             const scriptKigo = document.createElement('script');
             const sheetKigoName = encodeURIComponent('歳時記データベース');
             scriptKigo.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${sheetKigoName}&range=A:H&tqx=responseHandler:kigoDataReceived`;
             document.body.appendChild(scriptKigo);
 
-            // 2. 「シート1」から既存俳句一覧を取得（重複チェック用）
+            // 2. 「シート1」から既存俳句一覧を取得
             const scriptPhrases = document.createElement('script');
             const sheet1Name = encodeURIComponent('シート1');
             scriptPhrases.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${sheet1Name}&range=A:A&tqx=responseHandler:phrasesDataReceived`;
@@ -238,10 +247,10 @@
 
         /* 
            ★ 歳時記データベースの列マッピング設定 ★
+           A列(c[0]): 季節 (例: 夏)
            B列(c[1]): 詳細季節 (例: 三夏)
            C列(c[2]): 親季語 (例: 裸)
-           E列(c[4]): 子季語 (例: パンツ, 裸などカンマ・スペース区切り可)
-           G列(c[6]): 季節 (例: 夏)
+           E列(c[4]): 子季語 (例: パンツ, 裸など)
         */
         function kigoDataReceived(data) {
             try {
@@ -250,18 +259,25 @@
                     const c = rows[i].c;
                     if (!c) continue;
 
-                    let detailSeason = c[1] && c[1].v ? String(c[1].v).trim() : ''; // B列
-                    let parentKigo   = c[2] && c[2].v ? String(c[2].v).trim() : ''; // C列
-                    let childKigo    = c[4] && c[4].v ? String(c[4].v).trim() : ''; // E列
-                    let seasonStr    = c[6] && c[6].v ? String(c[6].v).trim().toLowerCase() : 'muki'; // G列
+                    let seasonVal    = c[0] && c[0].v ? String(c[0].v).trim() : '無季'; // A列：季節
+                    let detailSeason = c[1] && c[1].v ? String(c[1].v).trim() : '';     // B列：詳細季節
+                    let parentKigo   = c[2] && c[2].v ? String(c[2].v).trim() : '';     // C列：親季語
+                    let childKigo    = c[4] && c[4].v ? String(c[4].v).trim() : '';     // E列：子季語
 
-                    // E列（子季語）または C列（親季語）が存在する場合に登録
+                    // 季節のアルファベット・英字を漢字に統一補正
+                    let normalizedSeason = '無季';
+                    if (seasonVal.includes('春') || seasonVal.toLowerCase().includes('haru')) normalizedSeason = '春';
+                    else if (seasonVal.includes('夏') || seasonVal.toLowerCase().includes('natsu')) normalizedSeason = '夏';
+                    else if (seasonVal.includes('秋') || seasonVal.toLowerCase().includes('aki')) normalizedSeason = '秋';
+                    else if (seasonVal.includes('冬') || seasonVal.toLowerCase().includes('huyu')) normalizedSeason = '冬';
+                    else if (seasonVal.includes('新年') || seasonVal.toLowerCase().includes('shinnen')) normalizedSeason = '新年';
+
                     if (childKigo || parentKigo) {
                         kigoDatabase.push({
                             parentKigo: parentKigo,
-                            childKigo: childKigo || parentKigo, // E列が空ならC列で補う
+                            childKigo: childKigo || parentKigo,
                             detailSeason: detailSeason,
-                            season: seasonStr
+                            season: normalizedSeason
                         });
                     }
                 }
@@ -281,7 +297,6 @@
             } catch (e) { console.error(e); }
         }
 
-        /* ── 文字列類似度（レーベンシュタイン距離）の計算 ── */
         function getSimilarity(str1, str2) {
             const s1 = str1.replace(/\s+/g, '');
             const s2 = str2.replace(/\s+/g, '');
@@ -315,16 +330,15 @@
             if (inputVal.trim() === '') {
                 previewEl.innerText = 'ここに句が表示されます';
                 previewEl.classList.add('placeholder');
-                previewEl.style.fontSize = '2.2rem';
+                previewEl.style.fontSize = '1.5rem';
             } else {
                 previewEl.innerText = inputVal;
                 previewEl.classList.remove('placeholder');
 
                 const len = inputVal.length;
-                if (len <= 15) previewEl.style.fontSize = '2.4rem';
-                else if (len <= 20) previewEl.style.fontSize = '1.8rem';
-                else if (len <= 25) previewEl.style.fontSize = '1.4rem';
-                else if (len <= 30) previewEl.style.fontSize = '1.1rem';
+                if (len <= 15) previewEl.style.fontSize = '1.8rem';
+                else if (len <= 20) previewEl.style.fontSize = '1.4rem';
+                else if (len <= 25) previewEl.style.fontSize = '1.1rem';
                 else previewEl.style.fontSize = '0.9rem';
             }
         }
@@ -338,7 +352,6 @@
             const phrase = document.getElementById('inputPhrase').value.trim();
             if (!phrase) { alert('句を入力してください。'); return; }
 
-            // 1. 類似度（80%以上）アラート判定
             let duplicateFound = null;
             let highestSimilarity = 0;
 
@@ -361,16 +374,14 @@
 
             currentHaikuData.phrase = phrase;
 
-            // 2. 季語判定（E列の子季語のいずれかが句に含まれているか照合）
             let matched = null;
-            let matchedWordLength = 0; // 最長一致を優先するためのカウンター
+            let matchedWordLength = 0;
 
+            // E列の子季語欄に含まれる文字で検索
             for (let item of kigoDatabase) {
-                // 子季語欄のキーワード（読点やスペースで区切られている場合にも対応）
                 let subWords = item.childKigo.split(/[,、\s]+/);
                 for (let word of subWords) {
                     if (word && phrase.includes(word)) {
-                        // より長い言葉でマッチしたものを優先（部分一致誤作動を防ぐ）
                         if (word.length > matchedWordLength) {
                             matchedWordLength = word.length;
                             matched = item;
@@ -384,18 +395,14 @@
                 let displayDetail = matched.detailSeason || '';
                 
                 document.getElementById('detectedKigoText').innerHTML = `<span>${displayParent}</span>（${displayDetail || '登録済'}）`;
-                document.getElementById('kigoInput').value = displayParent; // C列の親季語を設定
-                document.getElementById('detailSeasonInput').value = displayDetail; // B列の詳細季節を設定
-                
-                // 季節の選択ボックスをセット
-                if (matched.season) {
-                    document.getElementById('seasonSelect').value = matched.season;
-                }
+                document.getElementById('kigoInput').value = displayParent;      // C列：親季語
+                document.getElementById('seasonSelect').value = matched.season;  // A列：季節 (漢字)
+                document.getElementById('detailSeasonInput').value = displayDetail; // B列：詳細季節
             } else {
                 document.getElementById('detectedKigoText').innerHTML = '自動検出できませんでした<br><span style="font-size:0.85rem; font-weight:normal; color:#777;">（直接入力してください）</span>';
                 document.getElementById('kigoInput').value = '';
+                document.getElementById('seasonSelect').value = '無季';
                 document.getElementById('detailSeasonInput').value = '';
-                document.getElementById('seasonSelect').value = 'muki';
             }
 
             goToStep(2);
@@ -403,23 +410,22 @@
 
         function goToStep3() {
             currentHaikuData.kigo = document.getElementById('kigoInput').value.trim() || '無季';
-            currentHaikuData.detailSeason = document.getElementById('detailSeasonInput').value.trim();
             currentHaikuData.season = document.getElementById('seasonSelect').value;
+            currentHaikuData.detailSeason = document.getElementById('detailSeasonInput').value.trim();
             currentHaikuData.author = document.getElementById('authorInput').value.trim() || '西田亮太';
 
             const pEl = document.getElementById('previewPhrase');
             pEl.innerText = currentHaikuData.phrase;
 
             const len = currentHaikuData.phrase.length;
-            if (len <= 15) pEl.style.fontSize = '2.4rem';
-            else if (len <= 20) pEl.style.fontSize = '1.8rem';
-            else if (len <= 25) pEl.style.fontSize = '1.4rem';
-            else pEl.style.fontSize = '1.1rem';
+            if (len <= 15) pEl.style.fontSize = '1.8rem';
+            else if (len <= 20) pEl.style.fontSize = '1.4rem';
+            else if (len <= 25) pEl.style.fontSize = '1.1rem';
+            else pEl.style.fontSize = '0.9rem';
 
             document.getElementById('previewAuthor').innerText = currentHaikuData.author;
+            document.getElementById('bcSeason').innerText = currentHaikuData.season;
             
-            const seasonMap = {'haru':'春', 'natsu':'夏', 'aki':'秋', 'huyu':'冬', 'shinnen':'新年', 'muki':'無季'};
-            document.getElementById('bcSeason').innerText = seasonMap[currentHaikuData.season] || '雑';
             let kigoLabel = currentHaikuData.kigo + (currentHaikuData.detailSeason ? `（${currentHaikuData.detailSeason}）` : '');
             document.getElementById('bcKigo').innerText = kigoLabel;
 
