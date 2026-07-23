@@ -35,17 +35,17 @@
             font-size: 0.85rem; color: #8c8476; letter-spacing: 0.15em; text-align: center; width: 100%;
         }
 
-        /* 🖋️ ステップ1：縦書きキャンバス（下部入力ボックスと絶対被らない設計） */
+        /* 🖋️ ステップ1：縦書きキャンバス（入力ボックスと絶対重ならない安全設計） */
         .vertical-display-area {
             flex: 1; width: 100%; display: flex; justify-content: center; align-items: center;
-            overflow: hidden; padding-top: 10px; padding-bottom: 15px; margin-bottom: 5px;
+            overflow: hidden; padding-top: 5px; padding-bottom: 25px; margin-bottom: 10px;
         }
 
         .vertical-text-preview {
             writing-mode: vertical-rl; -webkit-writing-mode: vertical-rl;
             font-family: inherit; line-height: 1.0; letter-spacing: 0.3em;
             font-weight: 500; color: #2b2b2b; white-space: nowrap !important; text-align: center;
-            max-height: 48vh; display: block; margin: 0 auto;
+            max-height: 42vh; display: block; margin: 0 auto;
         }
         .vertical-text-preview.placeholder { color: #cccccc; font-size: 2.2rem; }
 
@@ -145,7 +145,7 @@
                 
                 <div class="form-group">
                     <label class="form-label">季語</label>
-                    <input type="text" id="kigoInput" class="text-input" placeholder="例：サングラス">
+                    <input type="text" id="kigoInput" class="text-input" placeholder="例：裸">
                 </div>
 
                 <div class="form-group">
@@ -188,7 +188,7 @@
                 <span class="separator">&lt;</span>
                 <span id="bcSeason">夏</span>
                 <span class="separator">&lt;</span>
-                <span id="bcKigo" style="font-weight: bold;">サングラス（三夏）</span>
+                <span id="bcKigo" style="font-weight: bold;">裸（三夏）</span>
             </div>
 
             <div id="previewAuthor" class="preview-author-tag"></div>
@@ -215,16 +215,15 @@
     </div>
 
     <script>
-        // ★ご自身のGASのWebアプリURLを設定してください
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzHXzTxO9ib26ESJ6IutSqHQWR8NmTQ40EtOnDhv-IQhkrHfZq85GO5V52HE0FUgtMv/exec';
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxKMtaJ230BSXo1xGiN-ni9bKIUaXh_TceCTAAjnU9DzcDBtuGrt4sa8Z6VbYF212ZK/exec';
         const SPREADSHEET_ID = '1m0y8AOJNx1Ad4I44poPheQAQNki1-QQIwi9wSw8jaBg';
 
         let kigoDatabase = [];
-        let existingPhrases = []; // 重複チェック用の既知の俳句データ
+        let existingPhrases = []; 
         let currentHaikuData = { phrase: '', kigo: '', detailSeason: '', season: 'natsu', author: '' };
 
         window.onload = function() {
-            // 1. 「歳時記データベース」から季語一覧を取得
+            // 1. 「歳時記データベース」から季語情報を取得（A:H全列）
             const scriptKigo = document.createElement('script');
             const sheetKigoName = encodeURIComponent('歳時記データベース');
             scriptKigo.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${sheetKigoName}&range=A:H&tqx=responseHandler:kigoDataReceived`;
@@ -237,17 +236,33 @@
             document.body.appendChild(scriptPhrases);
         };
 
+        /* 
+           ★ 歳時記データベースの列マッピング設定 ★
+           B列(c[1]): 詳細季節 (例: 三夏)
+           C列(c[2]): 親季語 (例: 裸)
+           E列(c[4]): 子季語 (例: パンツ, 裸などカンマ・スペース区切り可)
+           G列(c[6]): 季節 (例: 夏)
+        */
         function kigoDataReceived(data) {
             try {
                 const rows = data.table.rows;
                 for (let i = 0; i < rows.length; i++) {
                     const c = rows[i].c;
                     if (!c) continue;
-                    let kigoStr = c[3] && c[3].v ? String(c[3].v).trim() : (c[0] && c[0].v ? String(c[0].v).trim() : '');
-                    let seasonStr = c[6] && c[6].v ? String(c[6].v).trim().toLowerCase() : 'muki';
-                    let detailStr = c[7] && c[7].v ? String(c[7].v).trim() : '';
-                    if (kigoStr && !kigoDatabase.some(k => k.kigo === kigoStr)) {
-                        kigoDatabase.push({ kigo: kigoStr, season: seasonStr, detail: detailStr });
+
+                    let detailSeason = c[1] && c[1].v ? String(c[1].v).trim() : ''; // B列
+                    let parentKigo   = c[2] && c[2].v ? String(c[2].v).trim() : ''; // C列
+                    let childKigo    = c[4] && c[4].v ? String(c[4].v).trim() : ''; // E列
+                    let seasonStr    = c[6] && c[6].v ? String(c[6].v).trim().toLowerCase() : 'muki'; // G列
+
+                    // E列（子季語）または C列（親季語）が存在する場合に登録
+                    if (childKigo || parentKigo) {
+                        kigoDatabase.push({
+                            parentKigo: parentKigo,
+                            childKigo: childKigo || parentKigo, // E列が空ならC列で補う
+                            detailSeason: detailSeason,
+                            season: seasonStr
+                        });
                     }
                 }
             } catch (e) { console.error(e); }
@@ -266,7 +281,7 @@
             } catch (e) { console.error(e); }
         }
 
-        /* ── 文字列類似度（レーベンシュタイン距離）の計算アルゴリズム ── */
+        /* ── 文字列類似度（レーベンシュタイン距離）の計算 ── */
         function getSimilarity(str1, str2) {
             const s1 = str1.replace(/\s+/g, '');
             const s2 = str2.replace(/\s+/g, '');
@@ -323,7 +338,7 @@
             const phrase = document.getElementById('inputPhrase').value.trim();
             if (!phrase) { alert('句を入力してください。'); return; }
 
-            // 🔍 既存データとの80%以上類似度重複チェック
+            // 1. 類似度（80%以上）アラート判定
             let duplicateFound = null;
             let highestSimilarity = 0;
 
@@ -341,19 +356,41 @@
                 const proceed = confirm(
                     `【類似俳句のアラーム】\n\n入力された句は、すでに登録されている以下の俳句と ${Math.round(highestSimilarity)}% 一致しています：\n\n『${duplicateFound}』\n\nこのまま登録を進めますか？`
                 );
-                if (!proceed) return; // キャンセルされた場合は進まない
+                if (!proceed) return;
             }
 
             currentHaikuData.phrase = phrase;
 
-            // 季語の自動判定
-            let matched = kigoDatabase.find(item => phrase.includes(item.kigo));
-            
+            // 2. 季語判定（E列の子季語のいずれかが句に含まれているか照合）
+            let matched = null;
+            let matchedWordLength = 0; // 最長一致を優先するためのカウンター
+
+            for (let item of kigoDatabase) {
+                // 子季語欄のキーワード（読点やスペースで区切られている場合にも対応）
+                let subWords = item.childKigo.split(/[,、\s]+/);
+                for (let word of subWords) {
+                    if (word && phrase.includes(word)) {
+                        // より長い言葉でマッチしたものを優先（部分一致誤作動を防ぐ）
+                        if (word.length > matchedWordLength) {
+                            matchedWordLength = word.length;
+                            matched = item;
+                        }
+                    }
+                }
+            }
+
             if (matched) {
-                document.getElementById('detectedKigoText').innerHTML = `<span>${matched.kigo}</span>（${matched.detail || '登録済'}）`;
-                document.getElementById('kigoInput').value = matched.kigo;
-                document.getElementById('detailSeasonInput').value = matched.detail;
-                document.getElementById('seasonSelect').value = matched.season;
+                let displayParent = matched.parentKigo || '季語あり';
+                let displayDetail = matched.detailSeason || '';
+                
+                document.getElementById('detectedKigoText').innerHTML = `<span>${displayParent}</span>（${displayDetail || '登録済'}）`;
+                document.getElementById('kigoInput').value = displayParent; // C列の親季語を設定
+                document.getElementById('detailSeasonInput').value = displayDetail; // B列の詳細季節を設定
+                
+                // 季節の選択ボックスをセット
+                if (matched.season) {
+                    document.getElementById('seasonSelect').value = matched.season;
+                }
             } else {
                 document.getElementById('detectedKigoText').innerHTML = '自動検出できませんでした<br><span style="font-size:0.85rem; font-weight:normal; color:#777;">（直接入力してください）</span>';
                 document.getElementById('kigoInput').value = '';
@@ -404,7 +441,6 @@
                 btn.disabled = false;
                 btn.innerText = 'OK（スプレッドシートへ登録）';
                 if (data.status === 'success') {
-                    // 完了時に今回の句をローカルメモリにも追加（連続入力時の判定用）
                     existingPhrases.push(currentHaikuData.phrase);
                     goToStep(4);
                 } else {
