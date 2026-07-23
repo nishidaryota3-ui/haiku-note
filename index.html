@@ -28,7 +28,7 @@
             padding-bottom: 5px; flex-shrink: 0;
         }
 
-        /* 🖋️ ステップ1：入力専用エリア（キーボード展開時も快適） */
+        /* 🖋️ ステップ1：入力専用エリア */
         .input-screen-content {
             flex: 1; width: 100%; display: flex; flex-direction: column;
             justify-content: center; align-items: center; gap: 20px;
@@ -67,30 +67,36 @@
         }
         .text-input:focus { border-color: #2b2b2b; background: #fff; }
 
-        /* 👁️ ステップ3：プレビュー枠（自然な中央揃え） */
+        /* 👁️ ステップ3：プレビュー枠（完全な真ん中配置に修正） */
         .preview-container {
             position: relative; width: 100%; flex: 1;
             display: flex; justify-content: center; align-items: center;
-            padding-top: 2.5rem; padding-bottom: 10px; overflow: hidden;
+            overflow: hidden; padding: 40px 0;
+        }
+
+        .preview-header-area {
+            position: absolute; top: 5px; left: 0; right: 0;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            padding: 0 5px; pointer-events: none;
         }
 
         .preview-breadcrumb {
-            position: absolute; top: 10px; left: 0px; right: 120px; 
-            font-size: 0.82rem; color: #666666; letter-spacing: 0.05em; 
-            display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.4rem;
+            font-size: 0.8rem; color: #666666; letter-spacing: 0.05em; 
+            display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.3rem;
+            max-width: 65%;
         }
         .preview-breadcrumb span.separator { color: #b5b5b5; font-family: sans-serif; }
 
         .preview-author-tag {
-            position: absolute; top: 10px; right: 0px;
-            font-size: 1.0rem; color: #2b2b2b; letter-spacing: 0.1em; font-weight: 500;
+            font-size: 0.95rem; color: #2b2b2b; letter-spacing: 0.1em; font-weight: 500;
+            white-space: nowrap;
         }
 
         .preview-text-preview {
             writing-mode: vertical-rl; -webkit-writing-mode: vertical-rl;
             font-family: inherit; line-height: 1.0; letter-spacing: 0.25em;
             font-weight: 500; color: #2b2b2b; white-space: nowrap !important; text-align: center;
-            max-height: 40vh; display: block; margin: 0 auto;
+            max-height: 45vh; display: block; margin: 0 auto;
         }
 
         /* 🔘 ボタンデザイン */
@@ -121,7 +127,7 @@
             </div>
         </div>
 
-        <div></div><!-- 下部レイアウト調整用の空要素 -->
+        <div></div>
     </div>
 
     <!-- ── STEP 2：季語確認・手動訂正画面 ── -->
@@ -176,20 +182,24 @@
         </div>
     </div>
 
-    <!-- ── STEP 3：プレビュー画面（中央揃えで美しい配置） ── -->
+    <!-- ── STEP 3：プレビュー画面（完全な真ん中配置） ── -->
     <div id="step3" class="step-screen">
         <div class="preview-container">
-            <div id="previewBreadcrumb" class="preview-breadcrumb">
-                <span>home</span>
-                <span class="separator">&lt;</span>
-                <span>季寄せ</span>
-                <span class="separator">&lt;</span>
-                <span id="bcSeason">夏</span>
-                <span class="separator">&lt;</span>
-                <span id="bcKigo" style="font-weight: bold;">蛙（三夏）</span>
+            <!-- 上部の情報を綺麗に左右に配置する専用ヘッダー -->
+            <div class="preview-header-area">
+                <div id="previewBreadcrumb" class="preview-breadcrumb">
+                    <span>home</span>
+                    <span class="separator">&lt;</span>
+                    <span>季寄せ</span>
+                    <span class="separator">&lt;</span>
+                    <span id="bcSeason">夏</span>
+                    <span class="separator">&lt;</span>
+                    <span id="bcKigo" style="font-weight: bold;">蛙（三夏）</span>
+                </div>
+                <div id="previewAuthor" class="preview-author-tag"></div>
             </div>
 
-            <div id="previewAuthor" class="preview-author-tag"></div>
+            <!-- 縦書き俳句本体（真ん中に配置） -->
             <p id="previewPhrase" class="preview-text-preview"></p>
         </div>
 
