@@ -13,6 +13,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#faf9f6">
 
+    <!-- 🚀 PWA（アプリとしてインストール）設定 -->
+    <link rel="manifest" href="manifest.json">
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }</script>
+
     <style>
         /* 全体初期化 */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -438,35 +442,4 @@
 
             fetch(GAS_WEB_APP_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify(currentHaikuData)
-            })
-            .then(res => res.json())
-            .then(data => {
-                btn.disabled = false;
-                btn.innerText = 'OK（スプレッドシートへ登録）';
-                if (data.status === 'success') {
-                    goToStep(4);
-                } else {
-                    alert('送信に失敗しました：' + data.message);
-                }
-            })
-            .catch(err => {
-                btn.disabled = false;
-                btn.innerText = 'OK（スプレッドシートへ登録）';
-                goToStep(4);
-            });
-        }
-
-        function resetForm() {
-            const input = document.getElementById('inputPhrase');
-            input.value = '';
-            document.getElementById('kigoInput').value = '';
-            document.getElementById('detailSeasonInput').value = '';
-            updateLiveVertical();
-            goToStep(1);
-            input.focus();
-        }
-    </script>
-</body>
-</html>
+                header
