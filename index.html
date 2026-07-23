@@ -170,7 +170,7 @@
                 
                 <div class="form-group">
                     <label class="form-label">季語</label>
-                    <input type="text" id="kigoInput" class="text-input" placeholder="例：古池" onchange="checkAnd補完KigoData()">
+                    <input type="text" id="kigoInput" class="text-input" placeholder="例：古池" onchange="checkAndHokanKigoData()">
                 </div>
 
                 <div class="form-group">
@@ -328,8 +328,8 @@
             } catch (e) { console.error(e); }
         }
 
-        // 🔍 手入力された季語を歳時記DBと逆照合して自動補完する関数
-        function checkAnd補完KigoData() {
+        // 🔍 手入力された季語を歳時記DBと逆照合して自動補完する関数（関数名を修正済み）
+        function checkAndHokanKigoData() {
             var val = document.getElementById('kigoInput').value.trim();
             if (!val) return;
 
@@ -404,7 +404,7 @@
         }
 
         function goToStep3() {
-            checkAnd補完KigoData();
+            checkAndHokanKigoData();
 
             var inputKigo = document.getElementById('kigoInput').value.trim();
             currentHaikuData.author = document.getElementById('authorInput').value.trim() || '西田亮太';
@@ -450,4 +450,4 @@
                 pEl.style.fontSize = isSmallScreen ? '1.55rem' : '1.8rem';
             } else if (len <= 20) {
                 pEl.style.fontSize = isSmallScreen ? '1.25rem' : '1.4rem';
-            } else if (len <= 25) 
+            } e
