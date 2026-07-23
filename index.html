@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#faf9f6">
 
-    <!-- 🚀 PWA（アプリとしてインストール）設定 -->
+    <!-- 🚀 PWA設定 -->
     <link rel="manifest" href="manifest.json">
     <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }</script>
 
@@ -26,32 +26,32 @@
             height: 100%; width: 100%; overflow: hidden; user-select: none;
         }
 
-        /* 各ステップのコンテナ */
+        /* 各ステップのコンテナ（伸縮自在なフレックス構造） */
         .step-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: none; flex-direction: column; justify-content: space-between; align-items: center;
-            padding: calc(8px + env(safe-area-inset-top)) 15px calc(15px + env(safe-area-inset-bottom));
+            display: none; flex-direction: column; justify-content: flex-start; align-items: center;
+            padding: calc(6px + env(safe-area-inset-top)) 15px calc(10px + env(safe-area-inset-bottom));
         }
         .step-screen.active { display: flex; }
 
         /* ステップ見出し */
         .step-title {
             font-size: 0.8rem; color: #8c8476; letter-spacing: 0.15em; text-align: center; width: 100%;
-            padding-bottom: 2px; flex-shrink: 0;
+            margin-bottom: 4px; flex-shrink: 0;
         }
 
-        /* 🖋️ ステップ1：縦書きキャンバス（キーボード表示時も上部が隠れないよう最適化） */
+        /* 🖋️ ステップ1：縦書きエリア（見出し直下から1文字分開けて即開始・超上詰め） */
         .vertical-display-area {
             flex: 1; width: 100%; display: flex; justify-content: center; align-items: flex-start;
-            overflow: hidden; padding-top: 0.5rem; padding-bottom: 5px; margin-bottom: 2px;
-            min-height: 100px;
+            overflow: hidden; padding-top: 4px; padding-bottom: 4px;
+            min-height: 80px;
         }
 
         .vertical-text-preview {
             writing-mode: vertical-rl; -webkit-writing-mode: vertical-rl;
             font-family: inherit; line-height: 1.0; letter-spacing: 0.22em;
             font-weight: 500; color: #2b2b2b; white-space: nowrap !important; text-align: start;
-            max-height: calc(100% - 5px); display: block; margin: 0 auto;
+            max-height: 100%; display: block; margin: 0 auto;
         }
         .vertical-text-preview.placeholder { color: #cccccc; font-size: 1.4rem; text-align: center; }
 
@@ -59,8 +59,8 @@
         .input-dock {
             width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 6px;
             background: #ffffff; border: 1px solid #eae8e3; border-radius: 12px;
-            padding: 10px 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-            z-index: 10; flex-shrink: 0; margin-bottom: 5px;
+            padding: 8px 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            z-index: 10; flex-shrink: 0; margin-top: auto;
         }
 
         .dock-input {
@@ -72,7 +72,7 @@
         /* 🏷️ ステップ2：季語確認フォーム */
         .step2-content {
             flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;
-            overflow-y: auto; padding: 10px 0;
+            overflow-y: auto; padding: 5px 0;
         }
         .kigo-check-card {
             background: #ffffff; border: 1px solid #eae8e3; border-radius: 8px;
@@ -94,12 +94,12 @@
         .preview-container {
             position: relative; width: 100%; flex: 1;
             display: flex; justify-content: center; align-items: flex-start;
-            padding-top: 2.8rem; padding-bottom: 15px; overflow: hidden;
-            min-height: 150px;
+            padding-top: 2.2rem; padding-bottom: 10px; overflow: hidden;
+            min-height: 120px;
         }
 
         .preview-breadcrumb {
-            position: absolute; top: 0px; left: 0px; right: 120px; 
+            position: absolute; top: 0px; left: 0px; right: 110px; 
             font-size: 0.8rem; color: #666666; letter-spacing: 0.05em; 
             display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.4rem;
         }
@@ -107,20 +107,20 @@
 
         .preview-author-tag {
             position: absolute; top: 0px; right: 0px;
-            font-size: 1.0rem; color: #2b2b2b; letter-spacing: 0.1em; font-weight: 500;
+            font-size: 0.95rem; color: #2b2b2b; letter-spacing: 0.1em; font-weight: 500;
         }
 
         .preview-text-preview {
             writing-mode: vertical-rl; -webkit-writing-mode: vertical-rl;
             font-family: inherit; line-height: 1.0; letter-spacing: 0.22em;
             font-weight: 500; color: #2b2b2b; white-space: nowrap !important; text-align: start;
-            max-height: calc(100% - 5px); display: block; margin: 0 auto;
+            max-height: 100%; display: block; margin: 0 auto;
         }
 
-        /* 🔘 ボタンデザイン */
-        .btn-group { display: flex; gap: 12px; justify-content: center; width: 100%; max-width: 400px; z-index: 10; flex-shrink: 0; }
+        /* 🔘 ボタンデザイン（改行なし1行表記） */
+        .btn-group { display: flex; gap: 12px; justify-content: center; width: 100%; max-width: 400px; z-index: 10; flex-shrink: 0; margin-top: auto; }
         .btn {
-            flex: 1; padding: 11px 0; font-size: 0.95rem; font-family: inherit; letter-spacing: 0.15em;
+            flex: 1; padding: 10px 0; font-size: 0.95rem; font-family: inherit; letter-spacing: 0.15em;
             color: #faf9f6; background-color: #2b2b2b; border: none; border-radius: 25px;
             cursor: pointer; transition: opacity 0.2s, transform 0.1s; user-select: none;
             white-space: nowrap; text-align: center;
@@ -141,8 +141,7 @@
         </div>
 
         <div class="input-dock">
-            <!-- 直接oninputを設定して確実にリアルタイム連動させます -->
-            <input type="text" id="inputPhrase" class="dock-input" placeholder="ここをタップして入力..." autofocus oninput="updateLiveVertical()" onkeyup="updateLiveVertical()">
+            <input type="text" id="inputPhrase" class="dock-input" placeholder="ここをタップして入力..." autofocus>
             <div class="btn-group" style="margin-top: 2px; max-width: 100%;">
                 <button class="btn" style="width: 100%;" onclick="goToStep2()">次へ 進む ＞</button>
             </div>
@@ -260,13 +259,13 @@
 
         const seasonMapToJa = { 'haru':'春', 'natsu':'夏', 'aki':'秋', 'huyu':'冬', 'shinnen':'新年', 'muki':'無季' };
 
-        // リアルタイム縦書きプレビューの更新処理
+        // リアルタイム更新のコア処理（全イベント対応）
         function updateLiveVertical() {
-            const inputEl = document.getElementById('inputPhrase');
-            if (!inputEl) return;
-            const inputVal = inputEl.value;
-            const previewEl = document.getElementById('verticalPreview');
-            if (!previewEl) return;
+            var inputEl = document.getElementById('inputPhrase');
+            var previewEl = document.getElementById('verticalPreview');
+            if (!inputEl || !previewEl) return;
+
+            var inputVal = inputEl.value;
 
             if (!inputVal || inputVal.trim() === '') {
                 previewEl.innerText = 'ここに句が表示されます';
@@ -276,7 +275,7 @@
                 previewEl.innerText = inputVal;
                 previewEl.classList.remove('placeholder');
 
-                const len = inputVal.length;
+                var len = inputVal.length;
                 if (len <= 15) previewEl.style.fontSize = '1.7rem';
                 else if (len <= 20) previewEl.style.fontSize = '1.3rem';
                 else if (len <= 25) previewEl.style.fontSize = '1.05rem';
@@ -285,32 +284,41 @@
         }
 
         window.onload = function() {
-            const scriptKigo = document.createElement('script');
-            const sheetKigoName = encodeURIComponent('歳時記データベース');
+            // スプレッドシートデータ取得
+            var scriptKigo = document.createElement('script');
+            var sheetKigoName = encodeURIComponent('歳時記データベース');
             scriptKigo.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${sheetKigoName}&range=A:H&tqx=responseHandler:kigoDataReceived`;
             document.body.appendChild(scriptKigo);
 
-            const scriptPhrases = document.createElement('script');
-            const sheet1Name = encodeURIComponent('シート1');
+            var scriptPhrases = document.createElement('script');
+            var sheet1Name = encodeURIComponent('シート1');
             scriptPhrases.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?sheet=${sheet1Name}&range=A:A&tqx=responseHandler:phrasesDataReceived`;
             document.body.appendChild(scriptPhrases);
+
+            // 確実なイベント監視を登録
+            var inputEl = document.getElementById('inputPhrase');
+            if (inputEl) {
+                ['input', 'keyup', 'keydown', 'change', 'compositionupdate', 'blur'].forEach(function(evt) {
+                    inputEl.addEventListener(evt, updateLiveVertical);
+                });
+            }
         };
 
         function kigoDataReceived(data) {
             try {
-                const rows = data.table.rows;
-                for (let i = 0; i < rows.length; i++) {
-                    const c = rows[i].c;
+                var rows = data.table.rows;
+                for (var i = 0; i < rows.length; i++) {
+                    var c = rows[i].c;
                     if (!c) continue;
 
-                    let seasonVal    = c[0] && c[0].v ? String(c[0].v).trim() : 'muki';
-                    let detailSeason = c[1] && c[1].v ? String(c[1].v).trim() : '';
-                    let parentKigo   = c[2] && c[2].v ? String(c[2].v).trim() : '';
-                    let kigoKana     = c[3] && c[3].v ? String(c[3].v).trim() : '';
-                    let childKigo    = c[4] && c[4].v ? String(c[4].v).trim() : '';
+                    var seasonVal    = c[0] && c[0].v ? String(c[0].v).trim() : 'muki';
+                    var detailSeason = c[1] && c[1].v ? String(c[1].v).trim() : '';
+                    var parentKigo   = c[2] && c[2].v ? String(c[2].v).trim() : '';
+                    var kigoKana     = c[3] && c[3].v ? String(c[3].v).trim() : '';
+                    var childKigo    = c[4] && c[4].v ? String(c[4].v).trim() : '';
 
-                    let normalizedSeason = 'muki';
-                    let sLower = seasonVal.toLowerCase();
+                    var normalizedSeason = 'muki';
+                    var sLower = seasonVal.toLowerCase();
                     if (sLower.includes('春') || sLower.includes('haru')) normalizedSeason = 'haru';
                     else if (sLower.includes('夏') || sLower.includes('natsu')) normalizedSeason = 'natsu';
                     else if (sLower.includes('秋') || sLower.includes('aki')) normalizedSeason = 'aki';
@@ -332,11 +340,11 @@
 
         function phrasesDataReceived(data) {
             try {
-                const rows = data.table.rows;
-                for (let i = 0; i < rows.length; i++) {
-                    const c = rows[i].c;
+                var rows = data.table.rows;
+                for (var i = 0; i < rows.length; i++) {
+                    var c = rows[i].c;
                     if (c && c[0] && c[0].v) {
-                        let phraseStr = String(c[0].v).trim();
+                        var phraseStr = String(c[0].v).trim();
                         if (phraseStr) existingPhrases.push(phraseStr);
                     }
                 }
@@ -344,22 +352,24 @@
         }
 
         function goToStep(stepNum) {
-            document.querySelectorAll('.step-screen').forEach(el => el.classList.remove('active'));
-            document.getElementById(`step${stepNum}`).classList.add('active');
+            document.querySelectorAll('.step-screen').forEach(function(el) { el.classList.remove('active'); });
+            document.getElementById('step' + stepNum).classList.add('active');
         }
 
         function goToStep2() {
-            const phrase = document.getElementById('inputPhrase').value.trim();
+            var phrase = document.getElementById('inputPhrase').value.trim();
             if (!phrase) { alert('句を入力してください。'); return; }
 
             currentHaikuData.phrase = phrase;
 
-            let matched = null;
-            let matchedWordLength = 0;
+            var matched = null;
+            var matchedWordLength = 0;
 
-            for (let item of kigoDatabase) {
-                let subWords = item.childKigo.split(/[,、\s]+/);
-                for (let word of subWords) {
+            for (var i = 0; i < kigoDatabase.length; i++) {
+                var item = kigoDatabase[i];
+                var subWords = item.childKigo.split(/[,、\s]+/);
+                for (var j = 0; j < subWords.length; j++) {
+                    var word = subWords[j];
                     if (word && phrase.includes(word)) {
                         if (word.length > matchedWordLength) {
                             matchedWordLength = word.length;
@@ -372,9 +382,9 @@
             if (matched) {
                 autoDetectedParentKigo = matched.parentKigo || '';
                 autoDetectedKigoKana = matched.kigoKana || '';
-                let displayDetail = matched.detailSeason || '';
+                var displayDetail = matched.detailSeason || '';
                 
-                document.getElementById('detectedKigoText').innerHTML = `<span>${autoDetectedParentKigo}</span>（${displayDetail || '登録済'}）`;
+                document.getElementById('detectedKigoText').innerHTML = '<span>' + autoDetectedParentKigo + '</span>（' + (displayDetail || '登録済') + '）';
                 document.getElementById('kigoInput').value = autoDetectedParentKigo;
                 document.getElementById('seasonSelect').value = matched.season;
                 document.getElementById('detailSeasonInput').value = displayDetail;
@@ -391,7 +401,7 @@
         }
 
         function goToStep3() {
-            const inputKigo = document.getElementById('kigoInput').value.trim();
+            var inputKigo = document.getElementById('kigoInput').value.trim();
             currentHaikuData.author = document.getElementById('authorInput').value.trim() || '西田亮太';
             currentHaikuData.authorKana = document.getElementById('authorKanaInput').value.trim() || 'にしだりょうた';
             
@@ -408,8 +418,9 @@
                 currentHaikuData.season = document.getElementById('seasonSelect').value;
                 currentHaikuData.detailSeason = document.getElementById('detailSeasonInput').value.trim();
 
-                let matchedKana = '';
-                for (let item of kigoDatabase) {
+                var matchedKana = '';
+                for (var i = 0; i < kigoDatabase.length; i++) {
+                    var item = kigoDatabase[i];
                     if (item.parentKigo === inputKigo || item.childKigo === inputKigo) {
                         matchedKana = item.kigoKana;
                         break;
@@ -424,14 +435,7 @@
                 }
             }
 
-            const pEl = document.getElementById('previewPhrase');
+            var pEl = document.getElementById('previewPhrase');
             pEl.innerText = currentHaikuData.phrase;
 
-            const len = currentHaikuData.phrase.length;
-            if (len <= 15) pEl.style.fontSize = '1.7rem';
-            else if (len <= 20) pEl.style.fontSize = '1.3rem';
-            else if (len <= 25) pEl.style.fontSize = '1.05rem';
-            else pEl.style.fontSize = '0.85rem';
-
-            document.getElementById('previewAuthor').innerText = currentHaikuData.author;
-            document.
+            var len =
